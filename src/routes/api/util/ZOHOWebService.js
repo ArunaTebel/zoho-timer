@@ -6,7 +6,15 @@ export const httpService = {
             method: 'GET',
             headers: {'Authorization': `Bearer ${request.cookies.get('zoho-access-token')}`}
         })
-        return await response.json()
+        return response.body ? await response.json() : ''
+    },
+    post: async (url, postData = {}, request) => {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {'Authorization': `Bearer ${request.cookies.get('zoho-access-token')}`},
+            body: JSON.stringify(postData)
+        })
+        return response.body ? await response.json() : ''
     }
 }
 
@@ -33,12 +41,35 @@ export const Task = {
     fetchAll: async (request, portalId, projectId) => {
         const response = await httpService.get(`${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/tasks/`, request)
         return response.tasks ?? []
+    },
+    fetchMyTasks: async (request, portalId, projectId) => {
+        const response = await httpService.get(`${ZOHO_API_URL}/portal/${portalId}/mytasks/?project_ids=${projectId}&status=open`, request)
+        return response.tasks ?? []
     }
 }
 
 export const SubTask = {
-    fetchAll: async (request, portalId, projectId, taskid) => {
-        const response = await httpService.get(`${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/tasks/${taskid}/subtasks/`, request)
+    fetchAll: async (request, portalId, projectId, taskId) => {
+        const response = await httpService.get(`${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/tasks/${taskId}/subtasks/`, request)
+        return response.tasks ?? []
+    }
+}
+
+export const Timesheet = {
+    addLogWithTaskId: async (request, portalId, projectId, taskId, timeLog) => {
+        const response = await httpService.post(
+            `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/tasks/${taskId}/logs/?date=${timeLog.date}&bill_status=${timeLog.billStatus}&hours=${timeLog.hours}&notes=${timeLog.note}`,
+            {},
+            request
+        )
+        return response.tasks ?? []
+    },
+    addGeneralLog: async (request, portalId, projectId, timeLog) => {
+        const response = await httpService.post(
+            `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/logs/?date=${timeLog.date}&name=${timeLog.taskName}&bill_status=${timeLog.billStatus}&hours=${timeLog.hours}&notes=${timeLog.note}`,
+            {},
+            request
+        )
         return response.tasks ?? []
     }
 }
