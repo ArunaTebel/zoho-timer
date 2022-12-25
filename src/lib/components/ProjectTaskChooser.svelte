@@ -1,0 +1,38 @@
+<script>
+    import AutoComplete from "simple-svelte-autocomplete";
+    import {createEventDispatcher} from "svelte";
+    import {Task} from "../../routes/util/APIService.js";
+
+    const dispatch = createEventDispatcher();
+
+    export let portalId
+    export let selectedProjectId
+    export let selectedTaskId
+
+    let tasks = []
+    let selectedTask = {}
+
+    const initTaskList = async () => {
+        if (!selectedProjectId) {
+            return []
+        }
+        tasks = (await Task.fetchMyTasks(portalId, selectedProjectId))
+            .map((task) => {
+                return {id: task.id_string, name: task.name}
+            })
+        const selectedTaskIdx = tasks.findIndex(task => task.id === selectedTaskId)
+        selectedTask = {}
+        if (selectedTaskIdx !== -1) {
+            selectedTask = tasks[selectedTaskIdx]
+        }
+    }
+
+    $: initTaskList(selectedProjectId)
+</script>
+
+
+<AutoComplete items="{tasks}"
+              labelFieldName="name"
+              bind:selectedItem="{selectedTask}"
+              onChange={() => dispatch('task-selected', selectedTask)}
+              showClear/>

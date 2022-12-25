@@ -34,7 +34,7 @@ export const Task = {
         return response.data ?? []
     },
     fetchMyTasks: async (portalId, projectId) => {
-        const response = await httpService.get(`/api/portals/${portalId}/projects/${projectId}/mytasks/`)
+        const response = await httpService.get(`/api/portals/${portalId}/projects/${projectId}/mytasks`)
         return response.data ?? []
     }
 }

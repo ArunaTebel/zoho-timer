@@ -5,6 +5,8 @@
     import moment from "moment";
     import {Project, Task, Timesheet} from "../../util/APIService.js";
     import StorageService from "../../util/StorageService.js";
+    import ProjectChooser from "$lib/components/ProjectChooser.svelte";
+    import ProjectTaskChooser from "../../../lib/components/ProjectTaskChooser.svelte";
 
     const timerData = StorageService.timer.getData()
 
@@ -13,8 +15,8 @@
     let projects = []
     let tasks = []
     let zohoUserId = StorageService.common.getZohoUserId()
-    let selectedProject = timerData?.selectedProject
-    let selectedTask = timerData?.selectedTask
+    let selectedProject = timerData?.selectedProject ?? {}
+    let selectedTask = timerData?.selectedTask ?? {}
     let selectedTaskName = timerData?.selectedTaskName
     let isBillable = timerData?.isBillable
     let date = timerData?.date ?? moment().format('Y-M-D')
@@ -37,7 +39,8 @@
         }
     }
 
-    const onProjectChange = async () => {
+    const onProjectChange = async (event) => {
+        selectedProject = event.detail ?? {}
         if (!selectedProject || !selectedProject.id) {
             updateTimerDataStorage()
             return
@@ -53,7 +56,8 @@
         updateTimerDataStorage()
     }
 
-    const onTaskChange = () => {
+    const onTaskChange = (event) => {
+        selectedTask = event.detail
         updateTimerDataStorage()
     }
 
@@ -165,17 +169,15 @@
 <pre>Note: {note}</pre>
 <button on:click={onClickTimerBtn}>{timerBtnText}</button>
 
-<AutoComplete items="{projects}"
-              labelFieldName="name"
-              bind:selectedItem="{selectedProject}"
-              onChange={onProjectChange}
-              showClear/>
+<ProjectChooser on:project-selected={onProjectChange}
+                portalId="{$page.params.portalid}"
+                selectedProjectId={selectedProject?.id}/>
 
-<AutoComplete items="{tasks}"
-              labelFieldName="name"
-              bind:selectedItem="{selectedTask}"
-              onChange={onTaskChange}
-              showClear/>
+<ProjectTaskChooser on:task-selected={onTaskChange}
+                    portalId="{$page.params.portalid}"
+                    bind:selectedProjectId={selectedProject.id}
+                    selectedTaskId={selectedTask?.id}/>
+
 
 {#if !(selectedTask && selectedTask.id)}
     <input type="text" placeholder="Task Name" bind:value={selectedTaskName} on:keyup={() => updateTimerDataStorage()}/>
