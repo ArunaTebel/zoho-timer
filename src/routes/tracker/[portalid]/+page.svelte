@@ -182,27 +182,57 @@
 <!--<input type="text" placeholder="ZOHO User ID" bind:value={zohoUserId}-->
 <!--       on:keyup={event => StorageService.common.setZohoUserId(event.target.value)}>-->
 
-<button on:click={onClickTimerBtn}>{timerBtnText}</button>
+<div class="columns is-vcentered is-gapless">
+    <div class="column is-11">
+        <div class="columns is-vcentered">
+            <div class="column is-4">
+                <label class="label">Choose a Project</label>
+                <div class="control">
+                    <ProjectChooser on:project-selected={onProjectChange}
+                                    portalId="{$page.params.portalid}"
+                                    selectedProjectId={selectedProject?.id}/>
+                </div>
+            </div>
+            <div class="column is-7">
+                <ProjectItemChoser on:project-item-selected={onProjectItemChange}
+                                   portalId="{$page.params.portalid}"
+                                   bind:selectedProjectId={selectedProject.id}
+                                   selectedTaskId={selectedTask?.id}
+                                   selectedBugId={selectedBug?.id}
+                                   selectedTaskName={selectedTaskName}/>
+            </div>
 
-<ProjectChooser on:project-selected={onProjectChange}
-                portalId="{$page.params.portalid}"
-                selectedProjectId={selectedProject?.id}/>
+        </div>
+        <div class="columns is-vcentered">
+            <div class="column is-2">
+                <input class="input" type="date" bind:value={date} on:change={() => updateTimerDataStorage()}/>
+            </div>
+            <div class="column is-8">
+                <input class="input" type="text" maxlength="150" placeholder="Note" bind:value={note}
+                       on:keyup={() => updateTimerDataStorage()}/>
+            </div>
+            <div class="column is-2">
+                <label class="checkbox">
+                    <input type=checkbox bind:checked={isBillable} on:change={() => updateTimerDataStorage()}>
+                    Billable
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="column is-1">
+        <div class="field has-addons">
+            <p class="control">
+                <button class="button is-fullwidth" on:click={onClickTimerBtn}>
+                      <span class="icon is-small">
+                        <i class="fas fa-play"></i>
+                      </span>
+                    <span>{timerBtnText}</span>
+                </button>
+            </p>
+        </div>
+    </div>
+</div>
 
-<ProjectItemChoser on:project-item-selected={onProjectItemChange}
-                   portalId="{$page.params.portalid}"
-                   bind:selectedProjectId={selectedProject.id}
-                   selectedTaskId={selectedTask?.id}
-                   selectedBugId={selectedBug?.id}
-                   selectedTaskName={selectedTaskName}/>
-
-<input type="date" bind:value={date} on:change={() => updateTimerDataStorage()}/>
-
-<label>
-    <input type=checkbox bind:checked={isBillable} on:change={() => updateTimerDataStorage()}>
-    Is Billable?
-</label>
-
-<input type="text" maxlength="150" placeholder="Note" bind:value={note} on:keyup={() => updateTimerDataStorage()}/>
 
 <hr/>
 

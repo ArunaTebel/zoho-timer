@@ -34,4 +34,4 @@
               labelFieldName="name"
               bind:selectedItem="{selectedBug}"
               onChange={() => dispatch('bug-selected', selectedBug)}
-              showClear/>
+              showClear inputClassName="auto-complete-chooser"/>

@@ -31,4 +31,4 @@
               labelFieldName="name"
               bind:selectedItem="{selectedProject}"
               onChange={() => dispatch('project-selected', selectedProject)}
-              showClear/>
+              showClear inputClassName="auto-complete-chooser"/>
