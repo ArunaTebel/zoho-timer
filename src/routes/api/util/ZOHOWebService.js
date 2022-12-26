@@ -111,6 +111,14 @@ export const Timesheet = {
         for (const taskType of ['task', 'general', 'bug']) {
             await Timesheet.fetchWeeklyTimeLogsForUserByTaskType(request, portalId, userId, date, taskType, allTimeLogs)
         }
+
+        allTimeLogs.logs = Object.keys(allTimeLogs.logs).sort().reverse().reduce(
+            (obj, key) => {
+                obj[key] = allTimeLogs.logs[key];
+                return obj;
+            },
+            {}
+        );
         return allTimeLogs
     },
     fetchWeeklyTimeLogsForUserByTaskType: async (request, portalId, userId, date, taskType, allTimeLogs) => {

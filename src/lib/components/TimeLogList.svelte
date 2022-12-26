@@ -5,7 +5,7 @@
 
     export let portalId
 
-    let timeLogFilterDate = '2022-12-25';
+    let timeLogFilterDate = '2022-09-15';
     let timeLogs = {};
     let timeLogEditModalIsOpen = false
     let timeLogDeleteModalIsOpen = false
@@ -27,7 +27,7 @@
     })
 
     const fetchTimeLogs = async () => {
-        // timeLogs = await Timesheet.fetchWeeklyLogsForCurrentUser(portalId, moment(timeLogFilterDate).format('MM-D-Y'))
+        timeLogs = await Timesheet.fetchWeeklyLogsForCurrentUser(portalId, moment(timeLogFilterDate).format('MM-D-Y'))
     }
 
     const validateInputs = () => {
@@ -53,7 +53,7 @@
             timeLogEditSelectedTaskId,
             timeLogEditSelectedBugId,
             timeLogEditSelectedTaskName,
-            moment(timeLogEditSelectedDate).format('MM-D-Y'),
+            moment(timeLogEditSelectedDate).format('MM-DD-Y'),
             `${timeLogEditSelectedTimeDurationHrs}:${timeLogEditSelectedTimeDurationMins}`,
             timeLogEditSelectedNote,
             isBillable ? 'Billable' : 'Non Billable',
@@ -85,7 +85,7 @@
         isBillable = timeLogToEdit.bill_status === 'Billable'
         timeLogEditSelectedTimeDurationHrs = timeLogToEdit.hours
         timeLogEditSelectedTimeDurationMins = timeLogToEdit.minutes
-        timeLogEditSelectedDate = moment(date).format('Y-MM-D')
+        timeLogEditSelectedDate = moment(date).format('Y-MM-DD')
         timeLogEditSelectedNote = timeLogToEdit.notes
         projectItemMode = getItemModeForLog(timeLogToEdit)
         openTimeLogEditModal()
@@ -135,7 +135,13 @@
 
 </script>
 
-<input type="date" bind:value={timeLogFilterDate} on:change={() => fetchTimeLogs()}/>
+<div class="columns is-vcentered">
+    <div class="column is-2">
+        <label class="label">Choose a week</label>
+        <input class="input" type="week" bind:value={timeLogFilterDate} on:change={() => fetchTimeLogs()}/>
+    </div>
+</div>
+
 
 <div class="modal is-clipped" class:is-active={timeLogDeleteModalIsOpen}>
     <div class="modal-background"></div>
@@ -195,17 +201,18 @@
 <br/>
 {#if (timeLogs.logs)}
     {#each Object.keys(timeLogs.logs) as date }
-        Time logs for {date}
-        <table style="width: 100%">
+        <label class="label">{moment(date).format('Y-MM-DD')}</label>
+        <table id="time-log-table" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth"
+               style="width: 100%">
             <thead>
             <tr>
-                <th>Project</th>
-                <th>Task/Issue</th>
-                <th>Daily Log</th>
-                <th>Billing Type</th>
-                <th>Approval Status</th>
-                <th>Notes</th>
-                <th>Actions</th>
+                <th style="width: 25%">Project</th>
+                <th style="width: 30%">Task/Issue</th>
+                <th style="width: 5%">Duration</th>
+                <th style="width: 5%">Type</th>
+                <th style="width: 5%">Status</th>
+                <th style="width: 23%">Notes</th>
+                <th style="width: 7%">Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -218,15 +225,27 @@
                     <td>{timeLog.approval_status}</td>
                     <td>{timeLog.notes}</td>
                     <td>
-                        <button on:click={() => onTimeLogEditClicked(date, timeLog.id_string)}>Edit</button>
-                        <button on:click={() => onTimeLogDeleteClicked(date, timeLog.id_string)}>Delete</button>
+                        <div class="field has-addons is-inline">
+                            <button class="button is-small"
+                                    on:click={() => onTimeLogEditClicked(date, timeLog.id_string)}>
+                                <span class="icon is-small">
+                                    <i class="fas fa-edit"></i>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="field has-addons is-inline">
+                            <button class="button is-small"
+                                    on:click={() => onTimeLogDeleteClicked(date, timeLog.id_string)}>
+                                <span class="icon is-small">
+                                    <i class="fas fa-trash"></i>
+                                </span>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             {/each}
 
             </tbody>
         </table>
-        <br/>
-        <br/>
     {/each}
 {/if}
