@@ -4,8 +4,9 @@
     import {onMount} from "svelte";
 
     export let portalId
+    export let reloadedAt = moment().format('Y-MM-DD HH:mm:ss')
+    export let timeLogFilterDate = moment().format('Y-[W]W')
 
-    let timeLogFilterDate = '2022-09-15';
     let timeLogs = {};
     let timeLogEditModalIsOpen = false
     let timeLogDeleteModalIsOpen = false
@@ -27,7 +28,9 @@
     })
 
     const fetchTimeLogs = async () => {
-        timeLogs = await Timesheet.fetchWeeklyLogsForCurrentUser(portalId, moment(timeLogFilterDate).format('MM-D-Y'))
+        timeLogFilterDate = moment(timeLogFilterDate).format('Y-[W]W')
+        timeLogs = {}
+        timeLogs = await Timesheet.fetchWeeklyLogsForCurrentUser(portalId, moment(timeLogFilterDate).format('MM-DD-Y'))
     }
 
     const validateInputs = () => {
@@ -133,12 +136,13 @@
         return 'general'
     }
 
+    $: fetchTimeLogs(reloadedAt)
+
 </script>
 
 <div class="columns is-vcentered">
     <div class="column is-2">
-        <label class="label">Choose a week</label>
-        <input class="input" type="week" bind:value={timeLogFilterDate} on:change={() => fetchTimeLogs()}/>
+
     </div>
 </div>
 
@@ -197,55 +201,76 @@
         </footer>
     </div>
 </div>
-
-<br/>
-{#if (timeLogs.logs)}
-    {#each Object.keys(timeLogs.logs) as date }
-        <label class="label">{moment(date).format('Y-MM-DD')}</label>
-        <table id="time-log-table" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth"
-               style="width: 100%">
-            <thead>
-            <tr>
-                <th style="width: 25%">Project</th>
-                <th style="width: 30%">Task/Issue</th>
-                <th style="width: 5%">Duration</th>
-                <th style="width: 5%">Type</th>
-                <th style="width: 5%">Status</th>
-                <th style="width: 23%">Notes</th>
-                <th style="width: 7%">Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            {#each timeLogs.logs[date] as timeLog (timeLog.id_string) }
-                <tr>
-                    <td>{timeLog.project.name}</td>
-                    <td>{getTaskOrBugName(timeLog)}</td>
-                    <td>{timeLog.hours_display}</td>
-                    <td>{timeLog.bill_status}</td>
-                    <td>{timeLog.approval_status}</td>
-                    <td>{timeLog.notes}</td>
-                    <td>
-                        <div class="field has-addons is-inline">
-                            <button class="button is-small"
-                                    on:click={() => onTimeLogEditClicked(date, timeLog.id_string)}>
+<div class="card mt-4">
+    <header class="card-header">
+        <p class="card-header-title">
+            Weekly Time Logs
+            <span class="ml-3 field has-addons">
+                <input class="input is-inline is-small" type="week"
+                       bind:value={timeLogFilterDate}
+                       on:change={() => fetchTimeLogs()}/>
+                <button class="button is-small is-centered is-center" on:click={fetchTimeLogs}>
+                  <span class="icon is-small">
+                    <i class="fas fa-sync"></i>
+                  </span>
+                </button>
+            </span>
+        </p>
+    </header>
+    <div class="card-content">
+        <div class="content">
+            {#if (timeLogs.logs)}
+                {#each Object.keys(timeLogs.logs) as date }
+                    <label class="label">{moment(date).format('Y-MM-DD')}</label>
+                    <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth"
+                           style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th style="width: 25%">Project</th>
+                            <th style="width: 30%">Task/Issue</th>
+                            <th style="width: 5%">Duration</th>
+                            <th style="width: 5%">Type</th>
+                            <th style="width: 5%">Status</th>
+                            <th style="width: 23%;max-width: 23%;">Notes</th>
+                            <th style="width: 7%">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {#each timeLogs.logs[date] as timeLog (timeLog.id_string) }
+                            <tr>
+                                <td>{timeLog.project.name}</td>
+                                <td class="wrap">{getTaskOrBugName(timeLog)}</td>
+                                <td>{timeLog.hours_display}</td>
+                                <td>{timeLog.bill_status}</td>
+                                <td>{timeLog.approval_status}</td>
+                                <td class="wrap">{timeLog.notes}</td>
+                                <td>
+                                    <div class="field has-addons is-inline">
+                                        <button class="button is-small"
+                                                on:click={() => onTimeLogEditClicked(date, timeLog.id_string)}>
                                 <span class="icon is-small">
                                     <i class="fas fa-edit"></i>
                                 </span>
-                            </button>
-                        </div>
-                        <div class="field has-addons is-inline">
-                            <button class="button is-small"
-                                    on:click={() => onTimeLogDeleteClicked(date, timeLog.id_string)}>
+                                        </button>
+                                    </div>
+                                    <div class="field has-addons is-inline">
+                                        <button class="button is-small"
+                                                on:click={() => onTimeLogDeleteClicked(date, timeLog.id_string)}>
                                 <span class="icon is-small">
                                     <i class="fas fa-trash"></i>
                                 </span>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            {/each}
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {/each}
 
-            </tbody>
-        </table>
-    {/each}
-{/if}
+                        </tbody>
+                    </table>
+                {/each}
+            {:else }
+                <progress class="progress is-small is-primary" max="100">15%</progress>
+            {/if}
+        </div>
+    </div>
+</div>

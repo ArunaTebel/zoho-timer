@@ -12,6 +12,8 @@
 
     let timerText
     let timerBtnState = {icon: 'fa-play'}
+    let timeLogsReloadedAt = moment().format('Y-MM-DD HH:mm:ss')
+    let timeLogsFetchLogsForDate = moment().format('Y-MM-DD')
     let projects = []
     let tasks = []
     let zohoUserId = StorageService.common.getZohoUserId()
@@ -87,6 +89,7 @@
                     note,
                     isBillable ? 'Billable' : 'Non Billable'
                 )
+                refreshTimeLogs(moment(date).format('Y-MM-DD'))
                 clearTimer()
             } else {
                 startTimer()
@@ -179,6 +182,11 @@
     const setTimerBtnState = () => {
         timerBtnState.icon = getTimerStartedAt() ? 'fa-stop' : 'fa-play'
     }
+
+    const refreshTimeLogs = (fetchLogsForDate) => {
+        timeLogsFetchLogsForDate = fetchLogsForDate
+        timeLogsReloadedAt = moment().format('Y-MM-DD HH:mm:ss')
+    }
 </script>
 
 <!--<input type="text" placeholder="ZOHO User ID" bind:value={zohoUserId}-->
@@ -240,15 +248,4 @@
     </div>
 </div>
 
-<div class="card mt-4">
-    <header class="card-header">
-        <p class="card-header-title">
-            Weekly Time Logs
-        </p>
-    </header>
-    <div class="card-content">
-        <div class="content">
-            <TimeLogList portalId={$page.params.portalid}/>
-        </div>
-    </div>
-</div>
+<TimeLogList portalId={$page.params.portalid} reloadedAt={timeLogsReloadedAt} timeLogFilterDate={timeLogsFetchLogsForDate}/>
