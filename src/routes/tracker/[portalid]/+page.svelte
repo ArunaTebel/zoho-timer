@@ -14,7 +14,6 @@
     let timerBtnState = {icon: 'fa-play'}
     let timeLogsReloadedAt = moment().format('Y-MM-DD HH:mm:ss')
     let timeLogsFetchLogsForDate = moment().format('Y-MM-DD')
-    let projects = []
     let tasks = []
     let zohoUserId = StorageService.common.getZohoUserId()
     let selectedProject = timerData?.selectedProject ?? {}
@@ -27,10 +26,6 @@
     let projectItemMode = timerData?.projectItemMode
 
     onMount(async () => {
-        projects = (await Project.fetchAll($page.params.portalid))
-            .map((project) => {
-                return {id: project.id_string, name: project.name}
-            })
         setTimerBtnState()
         initTimer()
     });

@@ -1,5 +1,6 @@
 import {ZOHO_CLIENT_SECRET} from '$env/static/private';
 import {PUBLIC_ZOHO_CLIENT_ID, PUBLIC_ZOHO_OAUTH_URL} from '$env/static/public';
+import moment from "moment";
 
 export async function load(requestEvent) {
     const code = requestEvent.url.searchParams.get('code')
@@ -8,6 +9,8 @@ export async function load(requestEvent) {
     })
     const zohoAuthData = await response.json()
     requestEvent.cookies.set('zoho-access-token', zohoAuthData.access_token)
+    requestEvent.cookies.set('zoho-refresh-token', zohoAuthData.refresh_token)
+    requestEvent.cookies.set('zoho-access-token-recieved-at', moment().valueOf())
     return {
         zohoAuthData: zohoAuthData
     };

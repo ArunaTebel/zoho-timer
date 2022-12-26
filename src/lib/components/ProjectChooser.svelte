@@ -1,6 +1,6 @@
 <script>
     import AutoComplete from "simple-svelte-autocomplete";
-    import {createEventDispatcher, onMount} from "svelte";
+    import {createEventDispatcher} from "svelte";
     import {Project} from "../../routes/util/APIService.js";
 
     const dispatch = createEventDispatcher();

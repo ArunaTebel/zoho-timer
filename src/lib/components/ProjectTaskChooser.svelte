@@ -6,7 +6,7 @@
     const dispatch = createEventDispatcher();
 
     export let portalId
-    export let selectedProjectId = null
+    export let selectedProjectId = undefined
     export let selectedTaskId
 
     let tasks = []

@@ -5,7 +5,7 @@
 
     export let data
     let portals = []
-    let oauthUrl = `${PUBLIC_ZOHO_OAUTH_URL}/auth?scope=${PUBLIC_ZOHO_SCOPE}&client_id=${PUBLIC_ZOHO_CLIENT_ID}&response_type=code&access_type=offline&redirect_uri=${$page.url.origin}/auth-callback&prompt=none`
+    let oauthUrl = `${PUBLIC_ZOHO_OAUTH_URL}/auth?scope=${PUBLIC_ZOHO_SCOPE}&client_id=${PUBLIC_ZOHO_CLIENT_ID}&response_type=code&access_type=offline&redirect_uri=${$page.url.origin}/auth-callback&prompt=consent`
 
     async function fetchPortals() {
         portals = await Portal.fetchAll()

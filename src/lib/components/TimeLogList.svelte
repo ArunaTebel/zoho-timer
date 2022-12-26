@@ -23,10 +23,6 @@
     let timeLogEditSelectedNote
     let projectItemMode
 
-    onMount(() => {
-        fetchTimeLogs()
-    })
-
     const fetchTimeLogs = async () => {
         timeLogFilterDate = moment(timeLogFilterDate).format('Y-[W]W')
         timeLogs = {}
