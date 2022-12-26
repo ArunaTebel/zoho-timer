@@ -48,6 +48,13 @@ export const Task = {
     }
 }
 
+export const Bug = {
+    fetchMyBugs: async (request, portalId, projectId) => {
+        const response = await httpService.get(`${ZOHO_API_URL}/portal/${portalId}/mybugs/`, request)
+        return response.bugs ?? []
+    }
+}
+
 export const SubTask = {
     fetchAll: async (request, portalId, projectId, taskId) => {
         const response = await httpService.get(`${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/tasks/${taskId}/subtasks/`, request)
@@ -56,20 +63,70 @@ export const SubTask = {
 }
 
 export const Timesheet = {
-    addLogWithTaskId: async (request, portalId, projectId, taskId, timeLog) => {
+    saveLogWithTaskId: async (request, portalId, projectId, taskId, timeLog) => {
+        let logIdUrlPart = ''
+        if (timeLog.logId) {
+            logIdUrlPart += `${timeLog.logId}/`
+        }
         const response = await httpService.post(
-            `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/tasks/${taskId}/logs/?date=${timeLog.date}&bill_status=${timeLog.billStatus}&hours=${timeLog.hours}&notes=${timeLog.note}`,
+            `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/tasks/${taskId}/logs/${logIdUrlPart}?date=${timeLog.date}&bill_status=${timeLog.billStatus}&hours=${timeLog.hours}&notes=${timeLog.note}`,
             {},
             request
         )
-        return response.tasks ?? []
+        return response.tasklogs ?? []
+    },
+    addLogWithBugId: async (request, portalId, projectId, bugId, timeLog) => {
+        let logIdUrlPart = ''
+        if (timeLog.logId) {
+            logIdUrlPart += `${timeLog.logId}/`
+        }
+        const response = await httpService.post(
+            `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/bugs/${bugId}/logs/${logIdUrlPart}?date=${timeLog.date}&bill_status=${timeLog.billStatus}&hours=${timeLog.hours}&notes=${timeLog.note}`,
+            {},
+            request
+        )
+        return response.buglogs ?? []
     },
     addGeneralLog: async (request, portalId, projectId, timeLog) => {
+        let logIdUrlPart = ''
+        if (timeLog.logId) {
+            logIdUrlPart += `${timeLog.logId}/`
+        }
         const response = await httpService.post(
-            `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/logs/?date=${timeLog.date}&name=${timeLog.taskName}&bill_status=${timeLog.billStatus}&hours=${timeLog.hours}&notes=${timeLog.note}`,
+            `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/logs/${logIdUrlPart}?date=${timeLog.date}&name=${timeLog.taskName}&bill_status=${timeLog.billStatus}&hours=${timeLog.hours}&notes=${timeLog.note}`,
             {},
             request
         )
-        return response.tasks ?? []
+        return response.generallogs ?? []
+    },
+    fetchWeeklyLogsForUser: async (request, portalId, userId, date) => {
+        const allTimeLogs = {
+            logs: {}, meta: {task: {}, general: {}, bug: {}}
+        }
+
+        for (const taskType of ['task', 'general', 'bug']) {
+            await Timesheet.fetchWeeklyTimeLogsForUserByTaskType(request, portalId, userId, date, taskType, allTimeLogs)
+        }
+        return allTimeLogs
+    },
+    fetchWeeklyTimeLogsForUserByTaskType: async (request, portalId, userId, date, taskType, allTimeLogs) => {
+        let response = await httpService.get(
+            `${ZOHO_API_URL}/portal/${portalId}/logs?users_list=${userId}&date=${date}&view_type=week&bill_status=All&component_type=${taskType}&index=0&range=200`,
+            request
+        )
+        const timeLogData = response.timelogs ?? {}
+        const timeLogsByDate = timeLogData.date ?? []
+
+        allTimeLogs.meta[taskType].non_billable_hours = timeLogData.non_billable_hours
+        allTimeLogs.meta[taskType].billable_hours = timeLogData.billable_hours
+        allTimeLogs.meta[taskType].grandtotal = timeLogData.grandtotal
+
+        timeLogsByDate.forEach(timeLogsForDate => {
+            if (!allTimeLogs.logs[timeLogsForDate.date]) {
+                allTimeLogs.logs[timeLogsForDate.date] = []
+            }
+            allTimeLogs.logs[timeLogsForDate.date] = allTimeLogs.logs[timeLogsForDate.date].concat(timeLogsForDate[`${taskType}logs`])
+        })
+
     }
 }

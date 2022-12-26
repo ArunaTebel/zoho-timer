@@ -13,6 +13,7 @@
     let selectedTask = {}
 
     const initTaskList = async () => {
+        selectedTask = {}
         if (!selectedProjectId) {
             return []
         }
@@ -21,7 +22,6 @@
                 return {id: task.id_string, name: task.name}
             })
         const selectedTaskIdx = tasks.findIndex(task => task.id === selectedTaskId)
-        selectedTask = {}
         if (selectedTaskIdx !== -1) {
             selectedTask = tasks[selectedTaskIdx]
         }
@@ -29,7 +29,6 @@
 
     $: initTaskList(selectedProjectId)
 </script>
-
 
 <AutoComplete items="{tasks}"
               labelFieldName="name"

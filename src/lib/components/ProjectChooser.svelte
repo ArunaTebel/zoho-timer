@@ -11,16 +11,19 @@
     let projects = []
     let selectedProject = {}
 
-    onMount(async () => {
+    const initProjectList = async () => {
         projects = (await Project.fetchAll(portalId))
             .map(project => {
                 return {id: project.id_string, name: project.name}
             })
-        const selectedProjectIdx = projects.findIndex(task => task.id === selectedProjectId)
+        const selectedProjectIdx = projects.findIndex(project => project.id === selectedProjectId)
+        selectedProject = {}
         if (selectedProjectIdx !== -1) {
             selectedProject = projects[selectedProjectIdx]
         }
-    });
+    }
+
+    $: initProjectList(selectedProjectId)
 
 </script>
 

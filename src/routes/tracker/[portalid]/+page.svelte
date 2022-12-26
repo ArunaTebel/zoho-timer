@@ -1,12 +1,12 @@
 <script>
-    import AutoComplete from "simple-svelte-autocomplete"
     import {onMount} from 'svelte'
     import {page} from '$app/stores'
     import moment from "moment";
     import {Project, Task, Timesheet} from "../../util/APIService.js";
     import StorageService from "../../util/StorageService.js";
     import ProjectChooser from "$lib/components/ProjectChooser.svelte";
-    import ProjectTaskChooser from "../../../lib/components/ProjectTaskChooser.svelte";
+    import TimeLogList from "../../../lib/components/TimeLogList.svelte";
+    import ProjectItemChoser from "../../../lib/components/ProjectItemChoser.svelte";
 
     const timerData = StorageService.timer.getData()
 
@@ -17,10 +17,12 @@
     let zohoUserId = StorageService.common.getZohoUserId()
     let selectedProject = timerData?.selectedProject ?? {}
     let selectedTask = timerData?.selectedTask ?? {}
+    let selectedBug = timerData?.selectedBug ?? {}
     let selectedTaskName = timerData?.selectedTaskName
     let isBillable = timerData?.isBillable
     let date = timerData?.date ?? moment().format('Y-M-D')
     let note = timerData?.note
+    let projectItemMode = timerData?.projectItemMode
 
     onMount(async () => {
         projects = (await Project.fetchAll($page.params.portalid))
@@ -56,8 +58,16 @@
         updateTimerDataStorage()
     }
 
-    const onTaskChange = (event) => {
-        selectedTask = event.detail
+    const onProjectItemChange = (event) => {
+        const itemData = event.detail
+        if (itemData.itemMode === 'task') {
+            selectedTask = itemData.item
+        } else if (itemData.itemMode === 'bug') {
+            selectedBug = itemData.item
+        } else {
+            selectedTaskName = itemData.item
+        }
+        projectItemMode = itemData.itemMode
         updateTimerDataStorage()
     }
 
@@ -65,10 +75,12 @@
         try {
             validateInputs()
             if (getTimerStartedAt()) {
-                await Timesheet.addLog(
+                await Timesheet.saveLog(
                     $page.params.portalid,
                     selectedProject.id,
+                    projectItemMode,
                     selectedTask.id,
+                    selectedBug.id,
                     selectedTaskName,
                     moment(date).format('M-D-Y'),
                     getTimeElapsed(false),
@@ -89,16 +101,21 @@
         if (!(selectedProject && selectedProject.id)) {
             throw new Error('Please select a Project')
         }
-        const taskMissing = !(selectedTask && selectedTask.id)
-        const taskNameMissing = !(selectedTaskName && selectedTaskName.trim().length > 0)
-        if (taskMissing && taskNameMissing) {
-            throw new Error('Please select a Task or provide a Task Name')
+
+        if (projectItemMode === 'task' && !(selectedTask && selectedTask.id)) {
+            throw new Error('Please choose a Task')
         }
+
+        if (projectItemMode === 'bug' && !(selectedBug && selectedBug.id)) {
+            throw new Error('Please choose an Issue')
+        }
+
+        if (projectItemMode === 'general' && !(selectedTaskName && selectedTaskName.trim().length > 0)) {
+            throw new Error('Please enter a Task name')
+        }
+
         if (!date) {
             throw new Error('Please select a Date')
-        }
-        if (getTimeElapsed(false) === '00:00') {
-            // throw new Error('Minimum time duration must be one minute')
         }
     }
 
@@ -118,10 +135,12 @@
         const timerData = {
             selectedProject,
             selectedTask,
+            selectedBug,
             selectedTaskName,
             date,
             isBillable,
             note,
+            projectItemMode,
         }
         const timerStartedAt = getTimerStartedAt()
         if (startTimer) {
@@ -136,10 +155,12 @@
         StorageService.timer.clearData()
         selectedProject = {}
         selectedTask = {}
+        selectedBug = {}
         selectedTaskName = ''
         isBillable = false
         date = moment().format('Y-M-D')
         note = ''
+        projectItemMode = ''
     }
 
     const getTimeElapsed = (withSeconds = true) => {
@@ -160,28 +181,27 @@
 
 <input type="text" placeholder="ZOHO User ID" bind:value={zohoUserId}
        on:keyup={event => StorageService.common.setZohoUserId(event.target.value)}>
-<h3>Time: {timerText}</h3>
-<pre>Project ID: {selectedProject?.id}</pre>
-<pre>Task ID: {selectedTask?.id}</pre>
-<pre>Task Name: {selectedTaskName}</pre>
-<pre>Date: {date}</pre>
-<pre>Is Billable: {isBillable}</pre>
-<pre>Note: {note}</pre>
+<!--<h3>Time: {timerText}</h3>-->
+<!--<pre>Project ID: {selectedProject?.id}</pre>-->
+<!--<pre>Task ID: {selectedTask?.id}</pre>-->
+<!--<pre>Bug ID: {selectedBug?.id}</pre>-->
+<!--<pre>Task Name: {selectedTaskName}</pre>-->
+<!--<pre>Date: {date}</pre>-->
+<!--<pre>Is Billable: {isBillable}</pre>-->
+<!--<pre>Note: {note}</pre>-->
+<!--<pre>Mode: {projectItemMode}</pre>-->
 <button on:click={onClickTimerBtn}>{timerBtnText}</button>
 
 <ProjectChooser on:project-selected={onProjectChange}
                 portalId="{$page.params.portalid}"
                 selectedProjectId={selectedProject?.id}/>
 
-<ProjectTaskChooser on:task-selected={onTaskChange}
-                    portalId="{$page.params.portalid}"
-                    bind:selectedProjectId={selectedProject.id}
-                    selectedTaskId={selectedTask?.id}/>
-
-
-{#if !(selectedTask && selectedTask.id)}
-    <input type="text" placeholder="Task Name" bind:value={selectedTaskName} on:keyup={() => updateTimerDataStorage()}/>
-{/if}
+<ProjectItemChoser on:project-item-selected={onProjectItemChange}
+                   portalId="{$page.params.portalid}"
+                   bind:selectedProjectId={selectedProject.id}
+                   selectedTaskId={selectedTask?.id}
+                   selectedBugId={selectedBug?.id}
+                   selectedTaskName={selectedTaskName}/>
 
 <input type="date" bind:value={date} on:change={() => updateTimerDataStorage()}/>
 
@@ -190,4 +210,8 @@
     Is Billable?
 </label>
 
-<input type="text" placeholder="Note" bind:value={note} on:keyup={() => updateTimerDataStorage()}/>
+<input type="text" maxlength="150" placeholder="Note" bind:value={note} on:keyup={() => updateTimerDataStorage()}/>
+
+<hr/>
+
+<TimeLogList portalId={$page.params.portalid}/>
