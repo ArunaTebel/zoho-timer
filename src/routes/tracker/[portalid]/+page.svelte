@@ -230,11 +230,11 @@
             </div>
             <div class="columns is-vcentered">
 
-                <div class="column is-10">
+                <div class="column is-9">
                     <input class="input" type="text" maxlength="150" placeholder="Note" bind:value={note}
                            on:keyup={() => updateTimerDataStorage()}/>
                 </div>
-                <div class="column is-1">
+                <div class="column is-2">
                     <label class="checkbox">
                         <input type=checkbox bind:checked={isBillable} on:change={() => updateTimerDataStorage()}>
                         Billable

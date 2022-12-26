@@ -27,7 +27,7 @@
         </div>
     </div>
 </nav>
-<main class="has-background-light pt-4">
+<main class="has-background-light pt-4" style="min-height: 100vh">
     <section class="container">
         <slot></slot>
     </section>
