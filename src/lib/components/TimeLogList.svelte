@@ -221,27 +221,27 @@
         <div class="content">
             {#if (timeLogs.logs)}
                 {#each Object.keys(timeLogs.logs) as date }
-                    <label class="label">{moment(date).format('Y-MM-DD')}</label>
+                    <label class="label is-small">{moment(date).format('Y-MM-DD')}</label>
                     <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth"
                            style="width: 100%">
-                        <thead>
+                        <thead style="font-size: 0.9rem">
                         <tr>
                             <th style="width: 25%">Project</th>
                             <th style="width: 30%">Task/Issue</th>
                             <th style="width: 5%">Duration</th>
-                            <th style="width: 5%">Type</th>
+                            <th style="width: 5%">Billable?</th>
                             <th style="width: 5%">Status</th>
-                            <th style="width: 23%;max-width: 23%;">Notes</th>
-                            <th style="width: 7%">Actions</th>
+                            <th style="width: 22%;">Notes</th>
+                            <th style="width: 8%">Actions</th>
                         </tr>
                         </thead>
                         <tbody>
                         {#each timeLogs.logs[date] as timeLog (timeLog.id_string) }
-                            <tr>
+                            <tr style="font-size: 0.8rem">
                                 <td>{timeLog.project.name}</td>
                                 <td class="wrap">{getTaskOrBugName(timeLog)}</td>
                                 <td>{timeLog.hours_display}</td>
-                                <td>{timeLog.bill_status}</td>
+                                <td>{timeLog.bill_status === 'Billable' ? 'Yes' : 'No'}</td>
                                 <td>{timeLog.approval_status}</td>
                                 <td class="wrap">{timeLog.notes}</td>
                                 <td>
