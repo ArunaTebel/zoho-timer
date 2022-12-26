@@ -10,8 +10,8 @@
 
     const timerData = StorageService.timer.getData()
 
-    let timerText = '-'
-    let timerBtnText = 'Loading ...'
+    let timerText
+    let timerBtnState = {icon: 'fa-play'}
     let projects = []
     let tasks = []
     let zohoUserId = StorageService.common.getZohoUserId()
@@ -29,7 +29,7 @@
             .map((project) => {
                 return {id: project.id_string, name: project.name}
             })
-        setTimerBtnText()
+        setTimerBtnState()
         initTimer()
     });
 
@@ -91,7 +91,7 @@
             } else {
                 startTimer()
             }
-            setTimerBtnText()
+            setTimerBtnState()
         } catch (e) {
             console.error(e)
         }
@@ -129,6 +129,7 @@
 
     const startTimer = () => {
         updateTimerDataStorage(true)
+        initTimer()
     }
 
     const updateTimerDataStorage = (startTimer = false) => {
@@ -161,6 +162,7 @@
         date = moment().format('Y-M-D')
         note = ''
         projectItemMode = ''
+        initTimer()
     }
 
     const getTimeElapsed = (withSeconds = true) => {
@@ -174,66 +176,62 @@
         return moment.utc(duration * 1000).format('HH:mm')
     }
 
-    const setTimerBtnText = () => {
-        timerBtnText = getTimerStartedAt() ? 'Stop' : 'Start'
+    const setTimerBtnState = () => {
+        timerBtnState.icon = getTimerStartedAt() ? 'fa-stop' : 'fa-play'
     }
 </script>
 
 <!--<input type="text" placeholder="ZOHO User ID" bind:value={zohoUserId}-->
 <!--       on:keyup={event => StorageService.common.setZohoUserId(event.target.value)}>-->
 
-<div class="columns is-vcentered is-gapless">
-    <div class="column is-11">
-        <div class="columns is-vcentered">
-            <div class="column is-4">
-                <label class="label">Choose a Project</label>
-                <div class="control">
-                    <ProjectChooser on:project-selected={onProjectChange}
-                                    portalId="{$page.params.portalid}"
-                                    selectedProjectId={selectedProject?.id}/>
-                </div>
-            </div>
-            <div class="column is-7">
-                <ProjectItemChoser on:project-item-selected={onProjectItemChange}
-                                   portalId="{$page.params.portalid}"
-                                   bind:selectedProjectId={selectedProject.id}
-                                   selectedTaskId={selectedTask?.id}
-                                   selectedBugId={selectedBug?.id}
-                                   selectedTaskName={selectedTaskName}/>
-            </div>
-
-        </div>
-        <div class="columns is-vcentered">
-            <div class="column is-2">
-                <input class="input" type="date" bind:value={date} on:change={() => updateTimerDataStorage()}/>
-            </div>
-            <div class="column is-8">
-                <input class="input" type="text" maxlength="150" placeholder="Note" bind:value={note}
-                       on:keyup={() => updateTimerDataStorage()}/>
-            </div>
-            <div class="column is-2">
-                <label class="checkbox">
-                    <input type=checkbox bind:checked={isBillable} on:change={() => updateTimerDataStorage()}>
-                    Billable
-                </label>
-            </div>
+<div class="columns is-vcentered">
+    <div class="column is-4">
+        <label class="label">Choose a Project</label>
+        <div class="control">
+            <ProjectChooser on:project-selected={onProjectChange}
+                            portalId="{$page.params.portalid}"
+                            selectedProjectId={selectedProject?.id}/>
         </div>
     </div>
-    <div class="column is-1">
+    <div class="column is-5">
+        <ProjectItemChoser on:project-item-selected={onProjectItemChange}
+                           portalId="{$page.params.portalid}"
+                           bind:selectedProjectId={selectedProject.id}
+                           selectedTaskId={selectedTask?.id}
+                           selectedBugId={selectedBug?.id}
+                           selectedTaskName={selectedTaskName}/>
+    </div>
+    <div class="column is-2">
+        <label class="label pb-1">Choose a Date</label>
+        <div class="control">
+            <input class="input" type="date" bind:value={date} on:change={() => updateTimerDataStorage()}/>
+        </div>
+    </div>
+    <div class="column is-1 pt-6">
         <div class="field has-addons">
-            <p class="control">
-                <button class="button is-fullwidth" on:click={onClickTimerBtn}>
-                      <span class="icon is-small">
-                        <i class="fas fa-play"></i>
+            <button class="button is-full-widescreen is-fullwidth" on:click={onClickTimerBtn}>
+                      <span class="icon is-large">
+                        <i class="fas {timerBtnState.icon}"></i>
                       </span>
-                    <span>{timerBtnText}</span>
-                </button>
-            </p>
+            </button>
         </div>
     </div>
 </div>
+<div class="columns is-vcentered">
 
+    <div class="column is-10">
+        <input class="input" type="text" maxlength="150" placeholder="Note" bind:value={note}
+               on:keyup={() => updateTimerDataStorage()}/>
+    </div>
+    <div class="column is-1">
+        <label class="checkbox">
+            <input type=checkbox bind:checked={isBillable} on:change={() => updateTimerDataStorage()}>
+            Billable
+        </label>
+    </div>
+    <div class="column is-1 has-text-centered">
+        {timerText ? timerText : '-- : -- : --'}
+    </div>
+</div>
 
-<hr/>
-
-<TimeLogList portalId={$page.params.portalid}/>
+<!--<TimeLogList portalId={$page.params.portalid}/>-->

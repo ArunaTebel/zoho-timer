@@ -27,7 +27,7 @@
     })
 
     const fetchTimeLogs = async () => {
-        timeLogs = await Timesheet.fetchWeeklyLogsForCurrentUser(portalId, moment(timeLogFilterDate).format('MM-D-Y'))
+        // timeLogs = await Timesheet.fetchWeeklyLogsForCurrentUser(portalId, moment(timeLogFilterDate).format('MM-D-Y'))
     }
 
     const validateInputs = () => {
