@@ -179,17 +179,9 @@
     }
 </script>
 
-<input type="text" placeholder="ZOHO User ID" bind:value={zohoUserId}
-       on:keyup={event => StorageService.common.setZohoUserId(event.target.value)}>
-<!--<h3>Time: {timerText}</h3>-->
-<!--<pre>Project ID: {selectedProject?.id}</pre>-->
-<!--<pre>Task ID: {selectedTask?.id}</pre>-->
-<!--<pre>Bug ID: {selectedBug?.id}</pre>-->
-<!--<pre>Task Name: {selectedTaskName}</pre>-->
-<!--<pre>Date: {date}</pre>-->
-<!--<pre>Is Billable: {isBillable}</pre>-->
-<!--<pre>Note: {note}</pre>-->
-<!--<pre>Mode: {projectItemMode}</pre>-->
+<!--<input type="text" placeholder="ZOHO User ID" bind:value={zohoUserId}-->
+<!--       on:keyup={event => StorageService.common.setZohoUserId(event.target.value)}>-->
+
 <button on:click={onClickTimerBtn}>{timerBtnText}</button>
 
 <ProjectChooser on:project-selected={onProjectChange}

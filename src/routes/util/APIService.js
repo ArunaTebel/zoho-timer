@@ -13,7 +13,13 @@ export const httpService = {
             body: JSON.stringify(postData),
         })
         return await response.json()
-    }
+    },
+    delete: async (url) => {
+        const response = await fetch(url, {
+            method: 'DELETE'
+        })
+        return await response.json()
+    },
 }
 
 export const Portal = {
@@ -87,11 +93,30 @@ export const Timesheet = {
         })
         return response.data ?? []
     },
-    fetchTimeLogById: async (portalId, date) => {
-        const response = await httpService.post(`/api/portals/${portalId}/logs`, {
-            userId: StorageService.common.getZohoUserId(),
-            date: date
-        })
-        return response.data ?? []
+    deleteTimeLog: async (portalId, projectId, taskId, bugId, logId, taskMode) => {
+        if (taskMode === 'task') {
+            return await Timesheet.deleteTaskLog(portalId, projectId, taskId, logId)
+        } else if (taskMode === 'bug') {
+            return await Timesheet.deleteBugLog(portalId, projectId, bugId, logId)
+        } else if (taskMode === 'general') {
+            return await Timesheet.deleteGeneralLog(portalId, projectId, logId)
+        } else {
+            throw new Error('Invalid task type')
+        }
+    },
+    deleteTaskLog: async (portalId, projectId, taskId, logId) => {
+        return await httpService.delete(
+            `/api/portals/${portalId}/projects/${projectId}/tasks/${taskId}/logs/${logId}`
+        )
+    },
+    deleteBugLog: async (portalId, projectId, bugId, logId) => {
+        return await httpService.delete(
+            `/api/portals/${portalId}/projects/${projectId}/bugs/${bugId}/logs/${logId}`
+        )
+    },
+    deleteGeneralLog: async (portalId, projectId, logId) => {
+        return await httpService.delete(
+            `/api/portals/${portalId}/projects/${projectId}/logs/${logId}`
+        )
     },
 }

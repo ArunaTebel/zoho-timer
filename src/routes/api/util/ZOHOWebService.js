@@ -15,7 +15,14 @@ export const httpService = {
             body: JSON.stringify(postData)
         })
         return response.body ? await response.json() : ''
-    }
+    },
+    delete: async (url, request) => {
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: {'Authorization': `Bearer ${request.cookies.get('zoho-access-token')}`}
+        })
+        return response.body ? await response.json() : ''
+    },
 }
 
 export const Portal = {
@@ -68,36 +75,33 @@ export const Timesheet = {
         if (timeLog.logId) {
             logIdUrlPart += `${timeLog.logId}/`
         }
-        const response = await httpService.post(
+        return await httpService.post(
             `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/tasks/${taskId}/logs/${logIdUrlPart}?date=${timeLog.date}&bill_status=${timeLog.billStatus}&hours=${timeLog.hours}&notes=${timeLog.note}`,
             {},
             request
         )
-        return response.tasklogs ?? []
     },
     addLogWithBugId: async (request, portalId, projectId, bugId, timeLog) => {
         let logIdUrlPart = ''
         if (timeLog.logId) {
             logIdUrlPart += `${timeLog.logId}/`
         }
-        const response = await httpService.post(
+        return await httpService.post(
             `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/bugs/${bugId}/logs/${logIdUrlPart}?date=${timeLog.date}&bill_status=${timeLog.billStatus}&hours=${timeLog.hours}&notes=${timeLog.note}`,
             {},
             request
         )
-        return response.buglogs ?? []
     },
     addGeneralLog: async (request, portalId, projectId, timeLog) => {
         let logIdUrlPart = ''
         if (timeLog.logId) {
             logIdUrlPart += `${timeLog.logId}/`
         }
-        const response = await httpService.post(
+        return await httpService.post(
             `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/logs/${logIdUrlPart}?date=${timeLog.date}&name=${timeLog.taskName}&bill_status=${timeLog.billStatus}&hours=${timeLog.hours}&notes=${timeLog.note}`,
             {},
             request
         )
-        return response.generallogs ?? []
     },
     fetchWeeklyLogsForUser: async (request, portalId, userId, date) => {
         const allTimeLogs = {
@@ -128,5 +132,23 @@ export const Timesheet = {
             allTimeLogs.logs[timeLogsForDate.date] = allTimeLogs.logs[timeLogsForDate.date].concat(timeLogsForDate[`${taskType}logs`])
         })
 
+    },
+    deleteTaskLog: async (request, portalId, projectId, taskId, logId) => {
+        return await httpService.delete(
+            `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/tasks/${taskId}/logs/${logId}/`,
+            request
+        )
+    },
+    deleteBugLog: async (request, portalId, projectId, bugId, logId) => {
+        return await httpService.delete(
+            `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/bugs/${bugId}/logs/${logId}/`,
+            request
+        )
+    },
+    deleteGeneralLog: async (request, portalId, projectId, logId) => {
+        return await httpService.delete(
+            `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/logs/${logId}/`,
+            request
+        )
     }
 }

@@ -2,17 +2,15 @@
     import {Timesheet} from "../../routes/util/APIService.js";
     import moment from "moment";
     import {onMount} from "svelte";
-    import ProjectChooser from "./ProjectChooser.svelte";
-    import ProjectTaskChooser from "./ProjectTaskChooser.svelte";
-    import ProjectItemChoser from "./ProjectItemChoser.svelte";
-    import {page} from "$app/stores";
 
     export let portalId
 
     let timeLogFilterDate = '2022-12-25';
     let timeLogs = {};
     let timeLogEditModalIsOpen = false
+    let timeLogDeleteModalIsOpen = false
     let timeLogToEdit = {}
+    let timeLogToDelete = {}
     let timeLogEditSelectedProjectId
     let timeLogEditSelectedTaskId
     let timeLogEditSelectedBugId
@@ -61,6 +59,21 @@
             isBillable ? 'Billable' : 'Non Billable',
             timeLogToEdit.id_string
         )
+        await fetchTimeLogs()
+        closeTimeLogEditModal()
+    }
+
+    const deleteTimeLog = async () => {
+        await Timesheet.deleteTimeLog(
+            portalId,
+            timeLogToDelete.project.id_string,
+            timeLogToDelete.task?.id_string,
+            timeLogToDelete.bug?.id_string,
+            timeLogToDelete.id_string,
+            projectItemMode
+        )
+        await fetchTimeLogs()
+        closeTimeLogDeleteModal()
     }
 
     const onTimeLogEditClicked = async (date, timeLogId) => {
@@ -78,12 +91,26 @@
         openTimeLogEditModal()
     }
 
+    const onTimeLogDeleteClicked = async (date, timeLogId) => {
+        timeLogToDelete = timeLogs.logs[date].find(timeLog => timeLog.id_string === timeLogId)
+        projectItemMode = getItemModeForLog(timeLogToDelete)
+        openTimeLogDeleteModal()
+    }
+
     const openTimeLogEditModal = () => {
         timeLogEditModalIsOpen = true
     }
 
     const closeTimeLogEditModal = () => {
         timeLogEditModalIsOpen = false
+    }
+
+    const openTimeLogDeleteModal = () => {
+        timeLogDeleteModalIsOpen = true
+    }
+
+    const closeTimeLogDeleteModal = () => {
+        timeLogDeleteModalIsOpen = false
     }
 
     const getTaskOrBugName = (timeLog) => {
@@ -106,31 +133,28 @@
         return 'general'
     }
 
-    const getProjectItemIdFromLog = (timeLog, itemType) => {
-        if (itemType === 'task') {
-            return timeLog.task?.id_string
-        } else if (itemType === 'bug') {
-            return timeLog.bug?.id_string
-        } else {
-            return timeLog.name
-        }
-    }
-
-    const onProjectItemChange = (event) => {
-        const itemData = event.detail
-        if (itemData.itemMode === 'task') {
-            timeLogEditSelectedTaskId = itemData.item.id
-        } else if (itemData.itemMode === 'bug') {
-            timeLogEditSelectedBugId = itemData.item.id
-        } else {
-            timeLogEditSelectedTaskName = itemData.item
-        }
-        projectItemMode = itemData.itemMode
-    }
-
 </script>
 
 <input type="date" bind:value={timeLogFilterDate} on:change={() => fetchTimeLogs()}/>
+
+<div class="modal is-clipped" class:is-active={timeLogDeleteModalIsOpen}>
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Delete the time log?</p>
+            <button on:click={closeTimeLogDeleteModal} class="delete" aria-label="close"></button>
+        </header>
+        {#if (timeLogDeleteModalIsOpen)}
+            <section class="modal-card-body">
+                Are you sure you want to delete the selected time log?
+            </section>
+        {/if}
+        <footer class="modal-card-foot">
+            <button on:click={deleteTimeLog} class="button is-success">Yes, Delete</button>
+            <button on:click={closeTimeLogDeleteModal} class="button">Cancel</button>
+        </footer>
+    </div>
+</div>
 
 <div class="modal is-clipped" class:is-active={timeLogEditModalIsOpen}>
     <div class="modal-background"></div>
@@ -145,18 +169,6 @@
                 <br/>
                 Task: {getTaskOrBugName(timeLogToEdit)}
                 <br/>
-                <!--                <ProjectChooser on:project-selected={(event) => timeLogEditSelectedProjectId = event.detail?.id}-->
-                <!--                                portalId="{portalId}"-->
-                <!--                                selectedProjectId={timeLogEditSelectedProjectId}/>-->
-                <!--                <br/>-->
-                <!--                <br/>-->
-                <!--                <ProjectItemChoser on:project-item-selected={onProjectItemChange}-->
-                <!--                                   portalId="{portalId}"-->
-                <!--                                   itemMode={getItemModeForLog(timeLogToEdit)}-->
-                <!--                                   bind:selectedProjectId={timeLogEditSelectedProjectId}-->
-                <!--                                   selectedTaskId={getProjectItemIdFromLog(timeLogToEdit, 'task')}-->
-                <!--                                   selectedBugId={getProjectItemIdFromLog(timeLogToEdit, 'bug')}-->
-                <!--                                   selectedTaskName={getProjectItemIdFromLog(timeLogToEdit, 'general')}/>-->
                 <label>Date</label>
                 <input type="date" bind:value={timeLogEditSelectedDate}/>
                 <br/>
@@ -207,7 +219,7 @@
                     <td>{timeLog.notes}</td>
                     <td>
                         <button on:click={() => onTimeLogEditClicked(date, timeLog.id_string)}>Edit</button>
-                        <button on:click={openTimeLogEditModal}>Delete</button>
+                        <button on:click={() => onTimeLogDeleteClicked(date, timeLog.id_string)}>Delete</button>
                     </td>
                 </tr>
             {/each}
