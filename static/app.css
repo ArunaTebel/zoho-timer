@@ -4,5 +4,13 @@
 
 .wrap {
     word-wrap: break-word;
-    word-break:break-all;
+    word-break: break-all;
+}
+
+.time-duration-input {
+    width: 60% !important;
+}
+
+.full-width {
+    width: 100%;
 }

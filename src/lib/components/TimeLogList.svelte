@@ -1,7 +1,6 @@
 <script>
     import {Timesheet} from "../../routes/util/APIService.js";
     import moment from "moment";
-    import {onMount} from "svelte";
 
     export let portalId
     export let reloadedAt = moment().format('Y-MM-DD HH:mm:ss')
@@ -22,6 +21,9 @@
     let timeLogEditSelectedDate
     let timeLogEditSelectedNote
     let projectItemMode
+    let isDeleting = false
+    let isSaving = false
+    let timeLogEditErrorMessage
 
     const fetchTimeLogs = async () => {
         timeLogFilterDate = moment(timeLogFilterDate).format('Y-[W]W')
@@ -44,25 +46,32 @@
     }
 
     const saveTimeLog = async () => {
-        validateInputs()
-        await Timesheet.saveLog(
-            portalId,
-            timeLogEditSelectedProjectId,
-            projectItemMode,
-            timeLogEditSelectedTaskId,
-            timeLogEditSelectedBugId,
-            timeLogEditSelectedTaskName,
-            moment(timeLogEditSelectedDate).format('MM-DD-Y'),
-            `${timeLogEditSelectedTimeDurationHrs}:${timeLogEditSelectedTimeDurationMins}`,
-            timeLogEditSelectedNote,
-            isBillable ? 'Billable' : 'Non Billable',
-            timeLogToEdit.id_string
-        )
-        await fetchTimeLogs()
-        closeTimeLogEditModal()
+        isSaving = true
+        try {
+            validateInputs()
+            await Timesheet.saveLog(
+                portalId,
+                timeLogEditSelectedProjectId,
+                projectItemMode,
+                timeLogEditSelectedTaskId,
+                timeLogEditSelectedBugId,
+                timeLogEditSelectedTaskName,
+                moment(timeLogEditSelectedDate).format('MM-DD-Y'),
+                `${timeLogEditSelectedTimeDurationHrs}:${timeLogEditSelectedTimeDurationMins}`,
+                timeLogEditSelectedNote,
+                isBillable ? 'Billable' : 'Non Billable',
+                timeLogToEdit.id_string
+            )
+            closeTimeLogEditModal()
+            await fetchTimeLogs()
+        } catch (e) {
+            timeLogEditErrorMessage = e.message
+        }
+        isSaving = false
     }
 
     const deleteTimeLog = async () => {
+        isDeleting = true
         await Timesheet.deleteTimeLog(
             portalId,
             timeLogToDelete.project.id_string,
@@ -71,8 +80,9 @@
             timeLogToDelete.id_string,
             projectItemMode
         )
-        await fetchTimeLogs()
         closeTimeLogDeleteModal()
+        await fetchTimeLogs()
+        isDeleting = false
     }
 
     const onTimeLogEditClicked = async (date, timeLogId) => {
@@ -147,7 +157,7 @@
     <div class="modal-background"></div>
     <div class="modal-card">
         <header class="modal-card-head">
-            <p class="modal-card-title">Delete the time log?</p>
+            <p class="modal-card-title">Confirmation</p>
             <button on:click={closeTimeLogDeleteModal} class="delete" aria-label="close"></button>
         </header>
         {#if (timeLogDeleteModalIsOpen)}
@@ -156,7 +166,8 @@
             </section>
         {/if}
         <footer class="modal-card-foot">
-            <button on:click={deleteTimeLog} class="button is-success">Yes, Delete</button>
+            <button on:click={deleteTimeLog} class="button is-success" class:is-loading={isDeleting}>Yes, Delete
+            </button>
             <button on:click={closeTimeLogDeleteModal} class="button">Cancel</button>
         </footer>
     </div>
@@ -166,33 +177,74 @@
     <div class="modal-background"></div>
     <div class="modal-card">
         <header class="modal-card-head">
-            <p class="modal-card-title">Modal title</p>
+            <p class="modal-card-title">Edit Time Log</p>
             <button on:click={closeTimeLogEditModal} class="delete" aria-label="close"></button>
         </header>
         {#if (timeLogEditModalIsOpen)}
             <section class="modal-card-body">
-                Project: {timeLogToEdit.project.name}
-                <br/>
-                Task: {getTaskOrBugName(timeLogToEdit)}
-                <br/>
-                <label>Date</label>
-                <input type="date" bind:value={timeLogEditSelectedDate}/>
-                <br/>
-                <label>Time Duration</label>
-                <input type="number" min="0" max="11" bind:value={timeLogEditSelectedTimeDurationHrs}/> Hrs
-                <input type="number" min="0" max="59" bind:value={timeLogEditSelectedTimeDurationMins}/> Mins
-                <br/>
-                <br/>
-                <label>
-                    <input type=checkbox bind:checked={isBillable}>
-                    Is Billable?
-                </label>
-                <label>Notes</label>
-                <input maxlength="150" bind:value={timeLogEditSelectedNote}/>
+                {#if (timeLogEditErrorMessage)}
+                    <div class="notification is-danger">
+                        <button class="delete" on:click={() => timeLogEditErrorMessage = ''}></button>
+                        {timeLogEditErrorMessage}
+                    </div>
+                {/if}
+                <div class="field">
+                    <label class="label">Project</label>
+                    <div class="control">
+                        <input disabled class="input is-disabled" type="text" value={timeLogToEdit.project.name}/>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Task</label>
+                    <div class="control">
+                        <input disabled class="input is-disabled" type="text" value={getTaskOrBugName(timeLogToEdit)}/>
+                    </div>
+                </div>
+
+                <div class="columns is-vcentered">
+                    <div class="column is-4">
+                        <div class="field">
+                            <label class="label">Date</label>
+                            <div class="control">
+                                <input class="input" type="date" bind:value={timeLogEditSelectedDate}/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-3">
+                        <div class="field">
+                            <label class="label">Duration</label>
+                            <div class="control is-inline-flex">
+                                <input class="input is-inline time-duration-input mr-2" type="number" min="0" max="11"
+                                       bind:value={timeLogEditSelectedTimeDurationHrs}/>
+                                <input class="input is-inline time-duration-input" type="number" min="0" max="59"
+                                       bind:value={timeLogEditSelectedTimeDurationMins}/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-4">
+                        <div class="field mt-5">
+                            <div class="control">
+                                <label class="checkbox">
+                                    <input type=checkbox bind:checked={isBillable}>
+                                    Is Billable?
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Notes</label>
+                    <div class="control is-inline-flex full-width">
+                        <input class="input is-fullwidth" maxlength="150" bind:value={timeLogEditSelectedNote}/>
+                    </div>
+                </div>
+
             </section>
         {/if}
         <footer class="modal-card-foot">
-            <button on:click={saveTimeLog} class="button is-success">Save changes</button>
+            <button on:click={saveTimeLog} class="button is-success" class:is-loading={isSaving}>Save changes</button>
             <button on:click={closeTimeLogEditModal} class="button">Cancel</button>
         </footer>
     </div>
