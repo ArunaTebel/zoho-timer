@@ -21,7 +21,7 @@
     let selectedBug = timerData?.selectedBug ?? {}
     let selectedTaskName = timerData?.selectedTaskName
     let isBillable = timerData?.isBillable
-    let isBillingTypeDisabled = selectedTask.billingType === 'Billable' || selectedTask.billingType === 'Non-Billable'
+    let isBillingTypeDisabled = selectedTask.billingType === 'Billable' || selectedTask.billingType === 'Non Billable'
     let date = timerData?.date ?? moment().format('Y-MM-DD')
     let note = timerData?.note
     let projectItemMode = timerData?.projectItemMode
@@ -63,7 +63,7 @@
         if (itemData.itemMode === 'task') {
             selectedTask = itemData.item
             isBillable = selectedTask.billingType === 'Billable'
-            isBillingTypeDisabled = selectedTask.billingType === 'Billable' || selectedTask.billingType === 'Non-Billable'
+            isBillingTypeDisabled = selectedTask.billingType === 'Billable' || selectedTask.billingType === 'Non Billable'
         } else if (itemData.itemMode === 'bug') {
             selectedBug = itemData.item
         } else {
