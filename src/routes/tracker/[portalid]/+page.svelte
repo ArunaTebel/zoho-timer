@@ -2,7 +2,7 @@
     import {onMount} from 'svelte'
     import {page} from '$app/stores'
     import moment from "moment";
-    import {Project, Task, Timesheet} from "../../util/APIService.js";
+    import {Task, Timesheet} from "../../util/APIService.js";
     import StorageService from "../../util/StorageService.js";
     import ProjectChooser from "$lib/components/ProjectChooser.svelte";
     import TimeLogList from "../../../lib/components/TimeLogList.svelte";
@@ -21,6 +21,7 @@
     let selectedBug = timerData?.selectedBug ?? {}
     let selectedTaskName = timerData?.selectedTaskName
     let isBillable = timerData?.isBillable
+    let isBillingTypeDisabled = selectedTask.billingType === 'Billable' || selectedTask.billingType === 'Non-Billable'
     let date = timerData?.date ?? moment().format('Y-MM-DD')
     let note = timerData?.note
     let projectItemMode = timerData?.projectItemMode
@@ -56,9 +57,13 @@
     }
 
     const onProjectItemChange = (event) => {
+        isBillable = false
+        isBillingTypeDisabled = false
         const itemData = event.detail
         if (itemData.itemMode === 'task') {
             selectedTask = itemData.item
+            isBillable = selectedTask.billingType === 'Billable'
+            isBillingTypeDisabled = selectedTask.billingType === 'Billable' || selectedTask.billingType === 'Non-Billable'
         } else if (itemData.itemMode === 'bug') {
             selectedBug = itemData.item
         } else {
@@ -231,7 +236,8 @@
                 </div>
                 <div class="column is-2">
                     <label class="checkbox">
-                        <input type=checkbox bind:checked={isBillable} on:change={() => updateTimerDataStorage()}>
+                        <input type=checkbox disabled={isBillingTypeDisabled} bind:checked={isBillable}
+                               on:change={() => updateTimerDataStorage()}>
                         Billable
                     </label>
                 </div>
@@ -243,4 +249,5 @@
     </div>
 </div>
 
-<TimeLogList portalId={$page.params.portalid} reloadedAt={timeLogsReloadedAt} timeLogFilterDate={timeLogsFetchLogsForDate}/>
+<TimeLogList portalId={$page.params.portalid} reloadedAt={timeLogsReloadedAt}
+             timeLogFilterDate={timeLogsFetchLogsForDate}/>

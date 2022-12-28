@@ -19,7 +19,7 @@
         }
         tasks = (await Task.fetchMyTasks(portalId, selectedProjectId))
             .map((task) => {
-                return {id: task.id_string, name: task.name}
+                return {id: task.id_string, name: task.name, billingType: task.billingtype}
             })
         const selectedTaskIdx = tasks.findIndex(task => task.id === selectedTaskId)
         if (selectedTaskIdx !== -1) {
