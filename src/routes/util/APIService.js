@@ -22,6 +22,13 @@ export const httpService = {
     },
 }
 
+export const Auth = {
+    logout: async () => {
+        const response = await httpService.get(`/api/auth/logout`)
+        return response.data ?? {}
+    }
+}
+
 export const Portal = {
     fetchAll: async () => {
         const response = await httpService.get(`/api/portals/`)

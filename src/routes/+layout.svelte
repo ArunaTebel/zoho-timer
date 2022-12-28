@@ -1,6 +1,13 @@
 <script>
     import "bulma/css/bulma.min.css";
     import logo from '$lib/assets/img/logo.png';
+    import {Auth} from "./util/APIService.js";
+
+    const onLogout = async () => {
+        await Auth.logout()
+        location.reload()
+    }
+
 </script>
 <nav class="navbar is-warning" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
@@ -19,9 +26,9 @@
         <div class="navbar-end">
             <div class="navbar-item">
                 <div class="buttons">
-                    <a class="button is-danger is-small">
+                    <button on:click={onLogout} class="button is-danger is-small">
                         Log out
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
