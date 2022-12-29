@@ -248,7 +248,7 @@
                 <div class="column is-2">
                     <label class="label pb-1 is-small">Choose a Date</label>
                     <div class="control">
-                        <input class="input is-small" type="date" bind:value={date}
+                        <input max={moment().format('Y-MM-DD')} class="input is-small" type="date" bind:value={date}
                                on:change={() => updateTimerDataStorage()}/>
                     </div>
                 </div>

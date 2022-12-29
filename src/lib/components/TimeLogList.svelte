@@ -215,7 +215,7 @@
                         <div class="field">
                             <label class="label">Date</label>
                             <div class="control">
-                                <input class="input" type="date" bind:value={timeLogEditSelectedDate}/>
+                                <input max={moment().format('Y-MM-DD')} class="input" type="date" bind:value={timeLogEditSelectedDate}/>
                             </div>
                         </div>
                     </div>
