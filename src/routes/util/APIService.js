@@ -33,6 +33,10 @@ export const Portal = {
     fetchAll: async () => {
         const response = await httpService.get(`/api/portals/`)
         return response.data ?? []
+    },
+    fetchDetails: async (portalId) => {
+        const response = await httpService.get(`/api/portals/${portalId}`)
+        return response.data ?? []
     }
 }
 
@@ -40,23 +44,24 @@ export const Project = {
     fetchAll: async (portalId) => {
         const response = await httpService.get(`/api/portals/${portalId}/projects`)
         return response.data ?? []
+    },
+    fetchUsers: async (portalId, projectId) => {
+        const response = await httpService.get(`/api/portals/${portalId}/projects/${projectId}/users`)
+        return response.data ?? []
     }
 }
 
 export const Task = {
-    fetchMyTasks: async (portalId, projectId) => {
-        const response = await httpService.get(`/api/portals/${portalId}/projects/${projectId}/mytasks`)
+    fetchTasksToSubmitTime: async (portalId, projectId, selectedPortalUserId) => {
+        const response = await httpService.get(`/api/portals/${portalId}/projects/${projectId}/mytasks?zpuid=${selectedPortalUserId}`)
         return response.data ?? []
     }
 }
 
 export const Bug = {
-    fetchMyBugsForProject: async (portalId, projectId) => {
-        const response = await httpService.get(`/api/portals/${portalId}/mybugs`)
-        const myBugs = response.data ?? []
-        return myBugs.filter(bug => {
-            return bug.project_id_string === `${projectId}`
-        })
+    fetchBugsToSubmitTime: async (portalId, projectId, selectedPortalUserId) => {
+        const response = await httpService.get(`/api/portals/${portalId}/projects/${projectId}/mybugs?zpuid=${selectedPortalUserId}`)
+        return response.data ?? []
     }
 }
 

@@ -9,6 +9,7 @@
     export let portalId
     export let selectedProjectId
     export let selectedTaskId
+    export let selectedPortalUserId
     export let selectedTaskName
     export let selectedBugId
     export let itemMode = 'task'
@@ -30,9 +31,9 @@
 
 <div class="control">
     {#each Object.keys(itemModes) as mode}
-        <label class="radio has-text-weight-bold pb-3">
-            <input type=radio bind:group={itemMode} name="itemMode" value={mode}>
-            {itemModes[mode].name}
+        <label class="radio has-text-weight-bold pb-3 is-small">
+            <input class="is-small" type=radio bind:group={itemMode} name="itemMode" value={mode}>
+            <span class="is-small-font">{itemModes[mode].name}</span>
         </label>
     {/each}
 </div>
@@ -40,12 +41,14 @@
     <ProjectTaskChooser on:task-selected={dispatchEvent}
                         portalId={portalId}
                         bind:selectedProjectId={selectedProjectId}
+                        bind:selectedPortalUserId={selectedPortalUserId}
                         selectedTaskId={selectedTaskId}/>
     <br/>
 {:else if (itemMode === itemModes.bug.key)}
     <ProjectBugChooser on:bug-selected={dispatchEvent}
                        portalId={portalId}
                        bind:selectedProjectId={selectedProjectId}
+                       bind:selectedPortalUserId={selectedPortalUserId}
                        selectedBugId={selectedBugId}/>
     <br/>
 {:else }

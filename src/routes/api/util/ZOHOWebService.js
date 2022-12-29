@@ -1,4 +1,4 @@
-import {ZOHO_API_URL} from "$env/static/private";
+import {ZOHO_API_URL, ZOHO_API_URL_V3} from "$env/static/private";
 
 export const httpService = {
     get: async (url, request) => {
@@ -29,6 +29,9 @@ export const Portal = {
     fetchAll: async (request) => {
         const response = await httpService.get(`${ZOHO_API_URL}/portals/`, request)
         return response.portals ?? []
+    },
+    fetchDetails: async (request, portalId) => {
+        return await httpService.get(`${ZOHO_API_URL}/portal/${portalId}/`, request)
     }
 }
 
@@ -41,6 +44,11 @@ export const Project = {
         const url = `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/search?index=${index}&range=${range}&search_term=${searchTerm}&module=tasks`
         const response = await httpService.get(url, request)
         return response.tasks ?? []
+    },
+    fetchUsers: async (request, portalId, projectId) => {
+        const url = `${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/users/?index=0&range=200`
+        const response = await httpService.get(url, request)
+        return response.users ?? []
     }
 }
 
@@ -49,16 +57,16 @@ export const Task = {
         const response = await httpService.get(`${ZOHO_API_URL}/portal/${portalId}/projects/${projectId}/tasks/`, request)
         return response.tasks ?? []
     },
-    fetchMyTasks: async (request, portalId, projectId) => {
-        const response = await httpService.get(`${ZOHO_API_URL}/portal/${portalId}/mytasks/?project_ids=${projectId}&status=open`, request)
-        return response.tasks ?? []
+    fetchTasksToSubmitTime: async (request, portalId, projectId, portalUserId) => {
+        const response = await httpService.get(`${ZOHO_API_URL_V3}/portal/${portalId}/projects/${projectId}/timesheet/tasks?user_id=${portalUserId}&page=1&search_term=&type=All&search_offset=0&per_page=200`, request)
+        return Array.isArray(response) ? response : []
     }
 }
 
 export const Bug = {
-    fetchMyBugs: async (request, portalId, projectId) => {
-        const response = await httpService.get(`${ZOHO_API_URL}/portal/${portalId}/mybugs/`, request)
-        return response.bugs ?? []
+    fetchBugsToSubmitTime: async (request, portalId, projectId, portalUserId) => {
+        const response = await httpService.get(`${ZOHO_API_URL_V3}/portal/${portalId}/projects/${projectId}/timesheet/issues?user_id=${portalUserId}&page=1&search_term=&type=All&search_offset=0&per_page=200`, request)
+        return Array.isArray(response) ? response : []
     }
 }
 

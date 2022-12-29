@@ -2,20 +2,22 @@
     import {onMount} from 'svelte'
     import {page} from '$app/stores'
     import moment from "moment";
-    import {Task, Timesheet} from "../../util/APIService.js";
+    import {Portal, Project, Task, Timesheet} from "../../util/APIService.js";
     import StorageService from "../../util/StorageService.js";
     import ProjectChooser from "$lib/components/ProjectChooser.svelte";
-    import TimeLogList from "../../../lib/components/TimeLogList.svelte";
-    import ProjectItemChoser from "../../../lib/components/ProjectItemChoser.svelte";
+    import TimeLogList from "$lib/components/TimeLogList.svelte";
+    import ProjectItemChooser from "$lib/components/ProjectItemChooser.svelte";
+    import {success, error} from '$lib/util/toast-message'
 
+    const portalId = $page.params.portalid
     const timerData = StorageService.timer.getData()
+    let isTimerInitialized = false
 
     let timerText
     let timerBtnState = {icon: 'fa-play'}
     let timeLogsReloadedAt = moment().format('Y-MM-DD HH:mm:ss')
     let timeLogsFetchLogsForDate = moment().format('Y-MM-DD')
-    let tasks = []
-    let zohoUserId = StorageService.common.getZohoUserId()
+    let selectedPortalUserId
     let selectedProject = timerData?.selectedProject ?? {}
     let selectedTask = timerData?.selectedTask ?? {}
     let selectedBug = timerData?.selectedBug ?? {}
@@ -24,12 +26,30 @@
     let isBillingTypeDisabled = selectedTask.billingType === 'Billable' || selectedTask.billingType === 'Non Billable'
     let date = timerData?.date ?? moment().format('Y-MM-DD')
     let note = timerData?.note
-    let projectItemMode = timerData?.projectItemMode
+    let projectItemMode = timerData?.projectItemMode ?? 'task'
 
     onMount(async () => {
+        await setDynamicUserDetails()
         setTimerBtnState()
         initTimer()
+        isTimerInitialized = true
     });
+
+    const setDynamicUserDetails = async (projectId) => {
+        let zohoUserId = StorageService.common.getZohoUserId()
+        let zohoUser = StorageService.common.getZohoPortalUser()
+        if (!zohoUserId) {
+            const portal = await Portal.fetchDetails(portalId)
+            StorageService.common.setZohoUserId(portal.login_id)
+            zohoUserId = StorageService.common.getZohoUserId()
+        }
+        if (projectId && !(zohoUser && zohoUser.id)) {
+            const portalUser = (await Project.fetchUsers(portalId, projectId)).find(u => u.id === zohoUserId)
+            StorageService.common.setZohoPortalUser(portalUser)
+            zohoUser = StorageService.common.getZohoPortalUser()
+        }
+        selectedPortalUserId = zohoUser.zpuid
+    }
 
     const initTimer = () => {
         if (getTimeElapsed()) {
@@ -40,16 +60,20 @@
     }
 
     const onProjectChange = async (event) => {
+        if (!isTimerInitialized) {
+            return
+        }
         selectedProject = event.detail ?? {}
         if (!selectedProject || !selectedProject.id) {
             updateTimerDataStorage()
             return
         }
-        tasks = []
-        tasks = (await Task.fetchMyTasks($page.params.portalid, selectedProject?.id))
-            .map((task) => {
-                return {id: task.id_string, name: task.name}
-            })
+        await setDynamicUserDetails(selectedProject?.id)
+        const tasks = (await Task.fetchTasksToSubmitTime(portalId, selectedProject?.id, selectedPortalUserId)).map(
+            (task) => {
+                return {id: task.id, name: task.name}
+            }
+        )
         if (tasks.findIndex(task => task.id === selectedTask?.id) === -1) {
             selectedTask = {}
         }
@@ -57,19 +81,24 @@
     }
 
     const onProjectItemChange = (event) => {
+        if (!isTimerInitialized) {
+            return
+        }
         isBillable = false
         isBillingTypeDisabled = false
         const itemData = event.detail
         if (itemData.itemMode === 'task') {
             selectedTask = itemData.item
-            isBillable = selectedTask.billingType === 'Billable'
-            isBillingTypeDisabled = selectedTask.billingType === 'Billable' || selectedTask.billingType === 'Non Billable'
+            isBillable = selectedTask && selectedTask.billingType === 'Billable'
+            isBillingTypeDisabled = selectedTask && (selectedTask.billingType === 'Billable' || selectedTask.billingType === 'Non Billable')
+            projectItemMode = itemData.itemMode
         } else if (itemData.itemMode === 'bug') {
             selectedBug = itemData.item
-        } else {
+            projectItemMode = itemData.itemMode
+        } else if (itemData.itemMode === 'general') {
             selectedTaskName = itemData.item
+            projectItemMode = itemData.itemMode
         }
-        projectItemMode = itemData.itemMode
         updateTimerDataStorage()
     }
 
@@ -77,8 +106,8 @@
         try {
             validateInputs()
             if (getTimerStartedAt()) {
-                await Timesheet.saveLog(
-                    $page.params.portalid,
+                const response = await Timesheet.saveLog(
+                    portalId,
                     selectedProject.id,
                     projectItemMode,
                     selectedTask.id,
@@ -89,14 +118,19 @@
                     note,
                     isBillable ? 'Billable' : 'Non Billable'
                 )
-                refreshTimeLogs(moment(date).format('Y-MM-DD'))
+                if (response.error) {
+                    error(`Failed saving the time log. ${response.error.message}`)
+                } else {
+                    success('Successfully saved the time log')
+                    refreshTimeLogs(moment(date).format('Y-MM-DD'))
+                }
                 clearTimer()
             } else {
                 startTimer()
             }
             setTimerBtnState()
         } catch (e) {
-            console.error(e)
+            error(e.message)
         }
     }
 
@@ -164,7 +198,7 @@
         isBillable = false
         date = moment().format('Y-MM-DD')
         note = ''
-        projectItemMode = ''
+        projectItemMode = 'task'
         initTimer()
     }
 
@@ -196,32 +230,35 @@
     <div class="card-content">
         <div class="content">
             <div class="columns is-vcentered">
-                <div class="column is-4">
-                    <label class="label">Choose a Project</label>
-                    <div class="control">
+                <div class="column is-4 mt-2">
+                    <label class="label is-small">Choose a Project</label>
+                    <div class="control mt-2">
                         <ProjectChooser on:project-selected={onProjectChange}
-                                        portalId="{$page.params.portalid}"
+                                        portalId="{portalId}"
                                         selectedProjectId={selectedProject?.id}/>
                     </div>
                 </div>
                 <div class="column is-5">
-                    <ProjectItemChoser on:project-item-selected={onProjectItemChange}
-                                       portalId="{$page.params.portalid}"
+                    <ProjectItemChooser on:project-item-selected={onProjectItemChange}
+                                       portalId="{portalId}"
                                        bind:selectedProjectId={selectedProject.id}
+                                       bind:selectedPortalUserId={selectedPortalUserId}
+                                       itemMode={projectItemMode}
                                        selectedTaskId={selectedTask?.id}
                                        selectedBugId={selectedBug?.id}
                                        selectedTaskName={selectedTaskName}/>
                 </div>
                 <div class="column is-2">
-                    <label class="label pb-1">Choose a Date</label>
+                    <label class="label pb-1 is-small">Choose a Date</label>
                     <div class="control">
-                        <input class="input" type="date" bind:value={date} on:change={() => updateTimerDataStorage()}/>
+                        <input class="input is-small" type="date" bind:value={date}
+                               on:change={() => updateTimerDataStorage()}/>
                     </div>
                 </div>
-                <div class="column is-1 pt-6">
+                <div class="column is-1" style="margin-top: 25px">
                     <div class="field has-addons">
-                        <button class="button is-full-widescreen is-fullwidth" on:click={onClickTimerBtn}>
-                      <span class="icon is-large">
+                        <button class="button is-small is-full-widescreen is-fullwidth" on:click={onClickTimerBtn}>
+                      <span class="icon">
                         <i class="fas {timerBtnState.icon}"></i>
                       </span>
                         </button>
@@ -231,14 +268,14 @@
             <div class="columns is-vcentered">
 
                 <div class="column is-9">
-                    <input class="input" type="text" maxlength="150" placeholder="Note" bind:value={note}
+                    <input class="input is-small" type="text" maxlength="150" placeholder="Note" bind:value={note}
                            on:keyup={() => updateTimerDataStorage()}/>
                 </div>
                 <div class="column is-2">
                     <label class="checkbox">
                         <input type=checkbox disabled={isBillingTypeDisabled} bind:checked={isBillable}
                                on:change={() => updateTimerDataStorage()}>
-                        Billable
+                        <span class="is-small-font">Billable</span>
                     </label>
                 </div>
                 <div class="column is-1 has-text-centered">
@@ -249,5 +286,5 @@
     </div>
 </div>
 
-<TimeLogList portalId={$page.params.portalid} reloadedAt={timeLogsReloadedAt}
+<TimeLogList portalId={portalId} reloadedAt={timeLogsReloadedAt}
              timeLogFilterDate={timeLogsFetchLogsForDate}/>

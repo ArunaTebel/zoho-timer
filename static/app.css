@@ -14,3 +14,29 @@
 .full-width {
     width: 100%;
 }
+
+.project-item-icon {
+    font-size: 0.9rem;
+}
+
+.closed-task {
+    text-decoration: line-through;
+    color: #4a4a4a;
+}
+
+.chooser-item-wrapper {
+    font-size: 0.8rem;
+}
+
+.is-small-font {
+    font-size: 0.8rem !important;
+}
+
+.autocomplete.select::after {
+    display: none !important;
+}
+
+input.auto-complete-chooser {
+    border-radius: 0 !important;
+}
+

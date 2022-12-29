@@ -3,6 +3,6 @@ import {Task} from "../../../../../util/ZOHOWebService.js";
 
 export async function GET(event) {
     return json({
-        data: await Task.fetchMyTasks(event, event.params.portalid, event.params.projectid)
+        data: await Task.fetchTasksToSubmitTime(event, event.params.portalid, event.params.projectid, event.url.searchParams.get('zpuid'))
     });
 }

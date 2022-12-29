@@ -31,4 +31,8 @@
               labelFieldName="name"
               bind:selectedItem="{selectedProject}"
               onChange={() => dispatch('project-selected', selectedProject)}
-              showClear inputClassName="auto-complete-chooser"/>
+              showClear inputClassName="auto-complete-chooser is-small-font">
+    <div class="chooser-item-wrapper" slot="item" let:item let:label>
+        {@html label}
+    </div>
+</AutoComplete>
