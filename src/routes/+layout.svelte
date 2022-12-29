@@ -10,11 +10,11 @@
     }
 
 </script>
-<nav class="navbar is-warning" role="navigation" aria-label="main navigation">
+<nav class="navbar has-box-shadow" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
         <a class="navbar-item" href="/">
-            <img height="100%" src="{logo}" alt="Logo"> <span
-                class="subtitle is-4 ml-3 has-text-weight-bold">Essentials</span>
+            <img height="100%" src="{logo}" alt="Logo">
+            <h2 class="ml-3 has-text-weight-bold">Essentials</h2>
         </a>
 
         <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
@@ -24,7 +24,7 @@
         </a>
     </div>
 
-    <div id="navbarBasicExample" class="navbar-menu">
+    <div class="navbar-menu">
         <div class="navbar-end">
             <div class="navbar-item">
                 <div class="buttons">

@@ -223,10 +223,7 @@
     }
 </script>
 
-<!--<input type="text" placeholder="ZOHO User ID" bind:value={zohoUserId}-->
-<!--       on:keyup={event => StorageService.common.setZohoUserId(event.target.value)}>-->
-
-<div class="card">
+<div class="card card-border-left-primary">
     <div class="card-content">
         <div class="content">
             <div class="columns is-vcentered">

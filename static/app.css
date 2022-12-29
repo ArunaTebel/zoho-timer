@@ -40,3 +40,32 @@ input.auto-complete-chooser {
     border-radius: 0 !important;
 }
 
+.card-border-left-primary {
+    border-left: 5px solid;
+    border-left-color: hsl(171, 100%, 41%);
+}
+
+.card-border-left-info {
+    border-left: 5px solid;
+    border-left-color: hsl(204, 86%, 53%);
+}
+
+.card-border-left-danger {
+    border-left: 5px solid;
+    border-left-color: hsl(348, 100%, 61%);
+}
+
+.card-border-left-dark {
+    border-left: 5px solid;
+    border-left-color: hsl(0, 0%, 21%);
+}
+
+.card-border-left-light {
+    border-left: 5px solid;
+    border-left-color: hsl(0, 0%, 96%);
+}
+
+.has-box-shadow {
+    box-shadow: 0 0.5em 1em -0.125em rgb(10 10 10 / 10%), 0 0 0 1px rgb(10 10 10 / 2%);
+}
+

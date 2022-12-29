@@ -6,7 +6,13 @@
     export let reloadedAt = moment().format('Y-MM-DD HH:mm:ss')
     export let timeLogFilterDate = moment().format('Y-[W]W')
 
-    let timeLogs = {};
+    let timeLogs = {}
+    let timeLogsMetadata = {
+        task: {billable_hours: '00:00', non_billable_hours: '00:00', grandtotal: '00:00'},
+        general: {billable_hours: '00:00', non_billable_hours: '00:00', grandtotal: '00:00'},
+        bug: {billable_hours: '00:00', non_billable_hours: '00:00', grandtotal: '00:00'}
+    }
+    let isTimeLogsLoading = true
     let timeLogEditModalIsOpen = false
     let timeLogDeleteModalIsOpen = false
     let timeLogToEdit = {}
@@ -29,6 +35,8 @@
         timeLogFilterDate = moment(timeLogFilterDate).format('Y-[W]W')
         timeLogs = {}
         timeLogs = await Timesheet.fetchWeeklyLogsForCurrentUser(portalId, moment(timeLogFilterDate).format('MM-DD-Y'))
+        timeLogsMetadata = timeLogs.meta
+        isTimeLogsLoading = false
     }
 
     const validateInputs = () => {
@@ -249,7 +257,7 @@
         </footer>
     </div>
 </div>
-<div class="card mt-4">
+<div class="card mt-4 card-border-left-info">
     <header class="card-header">
         <p class="card-header-title">
             Weekly Time Logs
@@ -264,9 +272,43 @@
                 </button>
             </span>
         </p>
+        <div class="is-inline-flex mt-4">
+            <div class="field is-grouped is-grouped-multiline mr-2">
+                <div class="control">
+                    <div class="tags has-addons">
+                        <span class="tag is-dark">Tasks</span>
+                        <span class="tag is-warning">{`B ${timeLogsMetadata.task?.billable_hours}`}</span>
+                        <span class="tag is-primary">{`NB ${timeLogsMetadata.task?.non_billable_hours}`}</span>
+                        <span class="tag is-success">{`T ${timeLogsMetadata.task?.grandtotal}`}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="field is-grouped is-grouped-multiline mr-2">
+                <div class="control">
+                    <div class="tags has-addons">
+                        <span class="tag is-dark">General</span>
+                        <span class="tag is-warning">{`B: ${timeLogsMetadata.general?.billable_hours}`}</span>
+                        <span class="tag is-primary">{`NB ${timeLogsMetadata.general?.non_billable_hours}`}</span>
+                        <span class="tag is-success">{`T ${timeLogsMetadata.general?.grandtotal}`}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="field is-grouped is-grouped-multiline mr-2">
+                <div class="control">
+                    <div class="tags has-addons">
+                        <span class="tag is-dark">Issues</span>
+                        <span class="tag is-warning">{`B ${timeLogsMetadata.bug?.billable_hours}`}</span>
+                        <span class="tag is-primary">{`NB ${timeLogsMetadata.bug?.non_billable_hours}`}</span>
+                        <span class="tag is-success">{`T ${timeLogsMetadata.bug?.grandtotal}`}</span>
+                    </div>
+                </div>
+            </div>
     </header>
     <div class="card-content">
         <div class="content">
+            {#if isTimeLogsLoading }
+                <progress class="progress is-small is-primary" max="100">15%</progress>
+            {/if}
             {#if (timeLogs.logs)}
                 {#each Object.keys(timeLogs.logs) as date }
                     <label class="label is-small">{moment(date).format('Y-MM-DD')}</label>
@@ -316,8 +358,6 @@
                         </tbody>
                     </table>
                 {/each}
-            {:else }
-                <progress class="progress is-small is-primary" max="100">15%</progress>
             {/if}
         </div>
     </div>

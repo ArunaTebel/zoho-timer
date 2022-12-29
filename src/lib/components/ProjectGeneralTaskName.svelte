@@ -6,4 +6,4 @@
     export let taskName
 
 </script>
-<input class="input" bind:value={taskName} on:change={() => dispatch('task-name-changed', taskName)}/>
+<input class="input is-small" bind:value={taskName} on:change={() => dispatch('task-name-changed', taskName)}/>
