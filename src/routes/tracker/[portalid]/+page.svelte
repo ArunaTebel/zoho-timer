@@ -57,9 +57,12 @@
 
     const initTimer = () => {
         if (getTimeElapsed()) {
-            timerIntervalId = setInterval(() => {
-                timerText = getTimeElapsed()
-            }, 1000)
+            timerText = getTimeElapsed()
+            if (!getTimerPausedAt()) {
+                timerIntervalId = setInterval(() => {
+                    timerText = getTimeElapsed()
+                }, 1000)
+            }
         }
     }
 
@@ -124,6 +127,9 @@
                 }
                 break
             case TimerStates.STOPPED:
+                if (timerState === TimerStates.PAUSED) {
+                    updateTotalPausedDuration()
+                }
                 await Timer.stop()
                 break
             case TimerStates.PAUSED:
@@ -172,6 +178,11 @@
         return getTimerData()?.totalPausedDuration
     }
 
+    const updateTotalPausedDuration = () => {
+        totalPausedDuration = getTotalPausedDuration() ?? 0
+        totalPausedDuration += moment().unix() - +getTimerPausedAt()
+    }
+
     const Timer = {
         start: () => {
             updateTimerDataStorage(true)
@@ -185,8 +196,7 @@
             clearInterval(timerIntervalId)
         },
         continue: () => {
-            totalPausedDuration = getTotalPausedDuration() ?? 0
-            totalPausedDuration += moment().unix() - +getTimerPausedAt()
+            updateTotalPausedDuration()
             pausedAt = false
             updateTimerDataStorage()
             setTimerState()
@@ -263,7 +273,14 @@
         if (!getTimerStartedAt()) {
             return false
         }
-        const duration = moment().unix() - (+getTimerStartedAt()) - (+totalPausedDuration)
+        let totalPausedTime = 0
+        if (getTimerPausedAt()) {
+            totalPausedDuration = getTotalPausedDuration() ?? 0
+            totalPausedTime = totalPausedDuration + (moment().unix() - +getTimerPausedAt())
+        } else {
+            totalPausedTime = totalPausedDuration
+        }
+        const duration = moment().unix() - (+getTimerStartedAt()) - (+totalPausedTime)
         if (withSeconds) {
             return moment.utc(duration * 1000).format('HH:mm:ss')
         }
@@ -286,7 +303,10 @@
     }
 </script>
 
-<div class="card card-border-left-primary">
+<div class="card card-border-left-primary"
+class:has-background-primary-light={timerState === TimerStates.RUNNING}
+class:has-background-warning-light={timerState === TimerStates.PAUSED}
+>
     <div class="card-content">
         <div class="content">
             <div class="columns is-vcentered">
@@ -317,7 +337,8 @@
                 </div>
                 <div class="column is-1" style="margin-top: 25px">
                     <div class="field has-addons">
-                        <button class="button is-small mr-1"
+                        <button class="button is-small mr-1 is-success"
+                                title={timerState === TimerStates.STOPPED ? 'Start Timer' : 'Resume Timer'}
                                 class:is-hidden={timerState === TimerStates.RUNNING}
                                 class:is-fullwidth={timerState === TimerStates.STOPPED}
                                 class:is-full-widescreen={timerState === TimerStates.STOPPED}
@@ -328,7 +349,8 @@
                                class:fa-play={timerState === TimerStates.STOPPED}></i>
                           </span>
                         </button>
-                        <button class="button is-small mr-1" class:is-hidden={timerState === TimerStates.STOPPED}
+                        <button class="button is-small mr-1 is-danger"
+                                class:is-hidden={timerState === TimerStates.STOPPED}
                                 on:click={() => onClickTimerBtn(TimerStates.STOPPED)}>
                           <span class="icon">
                             <i class="fas fa-stop"></i>
@@ -350,15 +372,21 @@
                     <input class="input is-small" type="text" maxlength="150" placeholder="Note" bind:value={note}
                            on:keyup={() => updateTimerDataStorage()}/>
                 </div>
-                <div class="column is-2">
+                <div class="column is-1">
                     <label class="checkbox">
                         <input type=checkbox disabled={isBillingTypeDisabled} bind:checked={isBillable}
                                on:change={() => updateTimerDataStorage()}>
                         <span class="is-small-font">Billable</span>
                     </label>
                 </div>
-                <div class="column is-1 has-text-centered">
-                    {timerText ? timerText : '-- : -- : --'}
+                <div class="column is-2 has-text-centered has-text-weight-bold is-info ml-4 pl-6">
+                    <span class="tag is-medium"
+                          class:is-info={timerState === TimerStates.RUNNING}
+                          class:is-warning={timerState === TimerStates.PAUSED}
+                          class:is-light={timerState === TimerStates.STOPPED}
+                    >
+                        {timerText ? timerText : '-- : -- : --'}
+                    </span>
                 </div>
             </div>
         </div>
