@@ -337,6 +337,20 @@
                     </div>
                 </div>
                 <div class="column is-1" style="margin-top: 25px">
+                    <label class="checkbox">
+                        <input type=checkbox disabled={isBillingTypeDisabled} bind:checked={isBillable}
+                               on:change={() => updateTimerDataStorage()}>
+                        <span class="is-small-font">Billable</span>
+                    </label>
+                </div>
+            </div>
+            <div class="columns is-vcentered">
+
+                <div class="column is-9">
+                    <input class="input is-small" type="text" maxlength="150" placeholder="Note" bind:value={note}
+                           on:keyup={() => updateTimerDataStorage()}/>
+                </div>
+                <div class="column is-2">
                     <div class="field has-addons">
                         <button class="button is-small mr-1 is-success"
                                 title={timerState === TimerStates.STOPPED ? 'Start Timer' : 'Resume Timer'}
@@ -364,23 +378,14 @@
                             <i class="fas fa-pause"></i>
                           </span>
                         </button>
+                        <button class="button is-small ml-1" title="Clear Timer" on:click={Timer.clear}>
+                            <span class="icon">
+                              <i class="fas fa-trash-can"></i>
+                            </span>
+                        </button>
                     </div>
                 </div>
-            </div>
-            <div class="columns is-vcentered">
-
-                <div class="column is-9">
-                    <input class="input is-small" type="text" maxlength="150" placeholder="Note" bind:value={note}
-                           on:keyup={() => updateTimerDataStorage()}/>
-                </div>
-                <div class="column is-1">
-                    <label class="checkbox">
-                        <input type=checkbox disabled={isBillingTypeDisabled} bind:checked={isBillable}
-                               on:change={() => updateTimerDataStorage()}>
-                        <span class="is-small-font">Billable</span>
-                    </label>
-                </div>
-                <div class="column is-2 has-text-centered has-text-weight-bold is-info ml-4 pl-6">
+                <div class="column is-1 has-text-weight-bold">
                     <span class="tag is-medium"
                           class:is-info={timerState === TimerStates.RUNNING}
                           class:is-warning={timerState === TimerStates.PAUSED}
