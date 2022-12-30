@@ -174,9 +174,9 @@
             </section>
         {/if}
         <footer class="modal-card-foot">
-            <button on:click={deleteTimeLog} class="button is-success" class:is-loading={isDeleting}>Yes, Delete
+            <button on:click={deleteTimeLog} class="button is-success is-small" class:is-loading={isDeleting}>Yes, Delete
             </button>
-            <button on:click={closeTimeLogDeleteModal} class="button">Cancel</button>
+            <button on:click={closeTimeLogDeleteModal} class="button is-small">Cancel</button>
         </footer>
     </div>
 </div>
@@ -197,35 +197,35 @@
                     </div>
                 {/if}
                 <div class="field">
-                    <label class="label">Project</label>
+                    <label class="label is-small">Project</label>
                     <div class="control">
-                        <input disabled class="input is-disabled" type="text" value={timeLogToEdit.project.name}/>
+                        <input disabled class="input is-disabled is-small" type="text" value={timeLogToEdit.project.name}/>
                     </div>
                 </div>
 
                 <div class="field">
-                    <label class="label">Task</label>
+                    <label class="label is-small">Task</label>
                     <div class="control">
-                        <input disabled class="input is-disabled" type="text" value={getTaskOrBugName(timeLogToEdit)}/>
+                        <input disabled class="input is-disabled is-small" type="text" value={getTaskOrBugName(timeLogToEdit)}/>
                     </div>
                 </div>
 
                 <div class="columns is-vcentered">
                     <div class="column is-4">
                         <div class="field">
-                            <label class="label">Date</label>
+                            <label class="label is-small">Date</label>
                             <div class="control">
-                                <input max={moment().format('Y-MM-DD')} class="input" type="date" bind:value={timeLogEditSelectedDate}/>
+                                <input max={moment().format('Y-MM-DD')} class="input is-small" type="date" bind:value={timeLogEditSelectedDate}/>
                             </div>
                         </div>
                     </div>
                     <div class="column is-3">
                         <div class="field">
-                            <label class="label">Duration</label>
+                            <label class="label is-small">Duration</label>
                             <div class="control is-inline-flex">
-                                <input class="input is-inline time-duration-input mr-2" type="number" min="0" max="11"
+                                <input class="input is-inline time-duration-input mr-2 is-small" type="number" min="0" max="11"
                                        bind:value={timeLogEditSelectedTimeDurationHrs}/>
-                                <input class="input is-inline time-duration-input" type="number" min="0" max="59"
+                                <input class="input is-inline time-duration-input is-small" type="number" min="0" max="59"
                                        bind:value={timeLogEditSelectedTimeDurationMins}/>
                             </div>
                         </div>
@@ -233,8 +233,8 @@
                     <div class="column is-4">
                         <div class="field mt-5">
                             <div class="control">
-                                <label class="checkbox">
-                                    <input type=checkbox bind:checked={isBillable}>
+                                <label class="checkbox is-small">
+                                    <input type="checkbox" class="is-small" bind:checked={isBillable}>
                                     Is Billable?
                                 </label>
                             </div>
@@ -243,17 +243,17 @@
                 </div>
 
                 <div class="field">
-                    <label class="label">Notes</label>
+                    <label class="label is-small">Notes</label>
                     <div class="control is-inline-flex full-width">
-                        <input class="input is-fullwidth" maxlength="150" bind:value={timeLogEditSelectedNote}/>
+                        <input class="input is-fullwidth is-small" maxlength="150" bind:value={timeLogEditSelectedNote}/>
                     </div>
                 </div>
 
             </section>
         {/if}
         <footer class="modal-card-foot">
-            <button on:click={saveTimeLog} class="button is-success" class:is-loading={isSaving}>Save changes</button>
-            <button on:click={closeTimeLogEditModal} class="button">Cancel</button>
+            <button on:click={saveTimeLog} class="button is-success is-small" class:is-loading={isSaving}>Save changes</button>
+            <button on:click={closeTimeLogEditModal} class="button is-small">Cancel</button>
         </footer>
     </div>
 </div>
@@ -277,9 +277,15 @@
                 <div class="control">
                     <div class="tags has-addons">
                         <span class="tag is-dark">Tasks</span>
-                        <span class="tag is-warning">{`B ${timeLogsMetadata.task?.billable_hours}`}</span>
-                        <span class="tag is-primary">{`NB ${timeLogsMetadata.task?.non_billable_hours}`}</span>
-                        <span class="tag is-success">{`T ${timeLogsMetadata.task?.grandtotal}`}</span>
+                        <span class="tag is-warning" title={`Billable hours`}>
+                            {`B ${timeLogsMetadata.task?.billable_hours}`}
+                        </span>
+                        <span class="tag is-primary" title={`Non billable hours`}>
+                            {`NB ${timeLogsMetadata.task?.non_billable_hours}`}
+                        </span>
+                        <span class="tag is-success" title={`Total hours`}>
+                            {`T ${timeLogsMetadata.task?.grandtotal}`}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -287,9 +293,15 @@
                 <div class="control">
                     <div class="tags has-addons">
                         <span class="tag is-dark">General</span>
-                        <span class="tag is-warning">{`B: ${timeLogsMetadata.general?.billable_hours}`}</span>
-                        <span class="tag is-primary">{`NB ${timeLogsMetadata.general?.non_billable_hours}`}</span>
-                        <span class="tag is-success">{`T ${timeLogsMetadata.general?.grandtotal}`}</span>
+                        <span class="tag is-warning" title={`Billable hours`}>
+                            {`B: ${timeLogsMetadata.general?.billable_hours}`}
+                        </span>
+                        <span class="tag is-primary" title={`Non billable hours`}>
+                            {`NB ${timeLogsMetadata.general?.non_billable_hours}`}
+                        </span>
+                        <span class="tag is-success" title={`Total hours`}>
+                            {`T ${timeLogsMetadata.general?.grandtotal}`}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -297,9 +309,15 @@
                 <div class="control">
                     <div class="tags has-addons">
                         <span class="tag is-dark">Issues</span>
-                        <span class="tag is-warning">{`B ${timeLogsMetadata.bug?.billable_hours}`}</span>
-                        <span class="tag is-primary">{`NB ${timeLogsMetadata.bug?.non_billable_hours}`}</span>
-                        <span class="tag is-success">{`T ${timeLogsMetadata.bug?.grandtotal}`}</span>
+                        <span class="tag is-warning" title={`Billable hours`}>
+                            {`B ${timeLogsMetadata.bug?.billable_hours}`}
+                        </span>
+                        <span class="tag is-primary" title={`Non billable hours`}>
+                            {`NB ${timeLogsMetadata.bug?.non_billable_hours}`}
+                        </span>
+                        <span class="tag is-success" title={`Total hours`}>
+                            {`T ${timeLogsMetadata.bug?.grandtotal}`}
+                        </span>
                     </div>
                 </div>
             </div>
