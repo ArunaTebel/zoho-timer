@@ -32,6 +32,7 @@
     let timeLogEditErrorMessage
 
     const fetchTimeLogs = async () => {
+        isTimeLogsLoading = true
         timeLogFilterDate = moment(timeLogFilterDate).format('Y-[W]W')
         timeLogs = {}
         timeLogs = await Timesheet.fetchWeeklyLogsForCurrentUser(portalId, moment(timeLogFilterDate).format('MM-DD-Y'))
@@ -174,7 +175,8 @@
             </section>
         {/if}
         <footer class="modal-card-foot">
-            <button on:click={deleteTimeLog} class="button is-success is-small" class:is-loading={isDeleting}>Yes, Delete
+            <button on:click={deleteTimeLog} class="button is-success is-small" class:is-loading={isDeleting}>Yes,
+                Delete
             </button>
             <button on:click={closeTimeLogDeleteModal} class="button is-small">Cancel</button>
         </footer>
@@ -199,14 +201,16 @@
                 <div class="field">
                     <label class="label is-small">Project</label>
                     <div class="control">
-                        <input disabled class="input is-disabled is-small" type="text" value={timeLogToEdit.project.name}/>
+                        <input disabled class="input is-disabled is-small" type="text"
+                               value={timeLogToEdit.project.name}/>
                     </div>
                 </div>
 
                 <div class="field">
                     <label class="label is-small">Task</label>
                     <div class="control">
-                        <input disabled class="input is-disabled is-small" type="text" value={getTaskOrBugName(timeLogToEdit)}/>
+                        <input disabled class="input is-disabled is-small" type="text"
+                               value={getTaskOrBugName(timeLogToEdit)}/>
                     </div>
                 </div>
 
@@ -215,7 +219,8 @@
                         <div class="field">
                             <label class="label is-small">Date</label>
                             <div class="control">
-                                <input max={moment().format('Y-MM-DD')} class="input is-small" type="date" bind:value={timeLogEditSelectedDate}/>
+                                <input max={moment().format('Y-MM-DD')} class="input is-small" type="date"
+                                       bind:value={timeLogEditSelectedDate}/>
                             </div>
                         </div>
                     </div>
@@ -223,9 +228,11 @@
                         <div class="field">
                             <label class="label is-small">Duration</label>
                             <div class="control is-inline-flex">
-                                <input class="input is-inline time-duration-input mr-2 is-small" type="number" min="0" max="11"
+                                <input class="input is-inline time-duration-input mr-2 is-small" type="number" min="0"
+                                       max="11"
                                        bind:value={timeLogEditSelectedTimeDurationHrs}/>
-                                <input class="input is-inline time-duration-input is-small" type="number" min="0" max="59"
+                                <input class="input is-inline time-duration-input is-small" type="number" min="0"
+                                       max="59"
                                        bind:value={timeLogEditSelectedTimeDurationMins}/>
                             </div>
                         </div>
@@ -245,14 +252,16 @@
                 <div class="field">
                     <label class="label is-small">Notes</label>
                     <div class="control is-inline-flex full-width">
-                        <input class="input is-fullwidth is-small" maxlength="150" bind:value={timeLogEditSelectedNote}/>
+                        <input class="input is-fullwidth is-small" maxlength="150"
+                               bind:value={timeLogEditSelectedNote}/>
                     </div>
                 </div>
 
             </section>
         {/if}
         <footer class="modal-card-foot">
-            <button on:click={saveTimeLog} class="button is-success is-small" class:is-loading={isSaving}>Save changes</button>
+            <button on:click={saveTimeLog} class="button is-success is-small" class:is-loading={isSaving}>Save changes
+            </button>
             <button on:click={closeTimeLogEditModal} class="button is-small">Cancel</button>
         </footer>
     </div>

@@ -11,8 +11,9 @@
 
     const portalId = $page.params.portalid
     const timerData = StorageService.timer.getData()
-    let isTimerInitialized = false
+    const TimerStates = {RUNNING: 1, PAUSED: 2, STOPPED: 3}
 
+    let isTimerInitialized = false
     let timerText
     let timerBtnState = {icon: 'fa-play'}
     let timeLogsReloadedAt = moment().format('Y-MM-DD HH:mm:ss')
@@ -25,12 +26,16 @@
     let isBillable = timerData?.isBillable
     let isBillingTypeDisabled = selectedTask.billingType === 'Billable' || selectedTask.billingType === 'Non Billable'
     let date = timerData?.date ?? moment().format('Y-MM-DD')
-    let note = timerData?.note
+    let note = timerData?.note ?? ''
     let projectItemMode = timerData?.projectItemMode ?? 'task'
+    let pausedAt = timerData?.pausedAt
+    let totalPausedDuration = timerData?.totalPausedDuration ?? 0
+    let timerState
+    let timerIntervalId
 
     onMount(async () => {
         await setDynamicUserDetails()
-        setTimerBtnState()
+        setTimerState()
         initTimer()
         isTimerInitialized = true
     });
@@ -53,7 +58,7 @@
 
     const initTimer = () => {
         if (getTimeElapsed()) {
-            setInterval(() => {
+            timerIntervalId = setInterval(() => {
                 timerText = getTimeElapsed()
             }, 1000)
         }
@@ -102,35 +107,31 @@
         updateTimerDataStorage()
     }
 
-    const onClickTimerBtn = async () => {
+    const onClickTimerBtn = async (nextTimerState) => {
         try {
             validateInputs()
-            if (getTimerStartedAt()) {
-                const response = await Timesheet.saveLog(
-                    portalId,
-                    selectedProject.id,
-                    projectItemMode,
-                    selectedTask.id,
-                    selectedBug.id,
-                    selectedTaskName,
-                    moment(date).format('MM-DD-Y'),
-                    getTimeElapsed(false),
-                    note,
-                    isBillable ? 'Billable' : 'Non Billable'
-                )
-                if (response.error) {
-                    error(`Failed saving the time log. ${response.error.message}`)
-                } else {
-                    success('Successfully saved the time log')
-                    refreshTimeLogs(moment(date).format('Y-MM-DD'))
-                }
-                clearTimer()
-            } else {
-                startTimer()
-            }
-            setTimerBtnState()
         } catch (e) {
             error(e.message)
+            return
+        }
+        switch (nextTimerState) {
+            case TimerStates.RUNNING:
+                if (timerState === TimerStates.STOPPED) {
+                    Timer.start()
+                } else if (timerState === TimerStates.PAUSED) {
+                    Timer.continue()
+                } else {
+                    error('Invalid timer action')
+                }
+                break
+            case TimerStates.STOPPED:
+                await Timer.stop()
+                break
+            case TimerStates.PAUSED:
+                await Timer.pause()
+                break
+            default:
+                error('Invalid timer action')
         }
     }
 
@@ -164,9 +165,77 @@
         return getTimerData()?.startedAt
     }
 
-    const startTimer = () => {
-        updateTimerDataStorage(true)
-        initTimer()
+    const getTimerPausedAt = () => {
+        return getTimerData()?.pausedAt
+    }
+
+    const getTotalPausedDuration = () => {
+        return getTimerData()?.totalPausedDuration
+    }
+
+    const Timer = {
+        start: () => {
+            updateTimerDataStorage(true)
+            initTimer()
+            setTimerState()
+        },
+        pause: () => {
+            pausedAt = moment().unix()
+            updateTimerDataStorage()
+            setTimerState()
+            clearInterval(timerIntervalId)
+        },
+        continue: () => {
+            totalPausedDuration = getTotalPausedDuration() ?? 0
+            totalPausedDuration += moment().unix() - +getTimerPausedAt()
+            pausedAt = false
+            updateTimerDataStorage()
+            setTimerState()
+            initTimer()
+        },
+        stop: async () => {
+            try {
+                validateInputs()
+                const response = await Timesheet.saveLog(
+                    portalId,
+                    selectedProject.id,
+                    projectItemMode,
+                    selectedTask.id,
+                    selectedBug.id,
+                    selectedTaskName,
+                    moment(date).format('MM-DD-Y'),
+                    getTimeElapsed(false),
+                    note,
+                    isBillable ? 'Billable' : 'Non Billable'
+                )
+                if (response.error) {
+                    error(`Failed to save the time log. ${response.error.message}`)
+                } else {
+                    success('Successfully saved the time log')
+                    refreshTimeLogs(moment(date).format('Y-MM-DD'))
+                }
+                Timer.clear()
+            } catch (e) {
+                error(e.message)
+            }
+        },
+        clear: () => {
+            timerState = TimerStates.STOPPED
+            StorageService.timer.clearData()
+            selectedProject = {}
+            selectedTask = {}
+            selectedBug = {}
+            selectedTaskName = ''
+            isBillable = false
+            date = moment().format('Y-MM-DD')
+            note = ''
+            projectItemMode = 'task'
+            setTimerState()
+            clearInterval(timerIntervalId)
+            timerText = '-- : -- : --'
+            pausedAt = false
+            totalPausedDuration = 0
+        }
     }
 
     const updateTimerDataStorage = (startTimer = false) => {
@@ -179,6 +248,8 @@
             isBillable,
             note,
             projectItemMode,
+            pausedAt,
+            totalPausedDuration,
         }
         const timerStartedAt = getTimerStartedAt()
         if (startTimer) {
@@ -189,32 +260,28 @@
         StorageService.timer.setData(timerData)
     }
 
-    const clearTimer = () => {
-        StorageService.timer.clearData()
-        selectedProject = {}
-        selectedTask = {}
-        selectedBug = {}
-        selectedTaskName = ''
-        isBillable = false
-        date = moment().format('Y-MM-DD')
-        note = ''
-        projectItemMode = 'task'
-        initTimer()
-    }
-
     const getTimeElapsed = (withSeconds = true) => {
         if (!getTimerStartedAt()) {
             return false
         }
-        const duration = moment().unix() - +getTimerStartedAt()
+        const duration = moment().unix() - (+getTimerStartedAt()) - (+totalPausedDuration)
         if (withSeconds) {
             return moment.utc(duration * 1000).format('HH:mm:ss')
         }
         return moment.utc(duration * 1000).format('HH:mm')
     }
 
-    const setTimerBtnState = () => {
-        timerBtnState.icon = getTimerStartedAt() ? 'fa-stop' : 'fa-play'
+    const setTimerState = () => {
+        if (getTimerPausedAt()) {
+            timerBtnState.icon = 'fa-forward-step'
+            timerState = TimerStates.PAUSED
+        } else if (getTimerStartedAt()) {
+            timerBtnState.icon = 'fa-stop'
+            timerState = TimerStates.RUNNING
+        } else {
+            timerBtnState.icon = 'fa-play'
+            timerState = TimerStates.STOPPED
+        }
     }
 
     const refreshTimeLogs = (fetchLogsForDate) => {
@@ -237,13 +304,13 @@
                 </div>
                 <div class="column is-5">
                     <ProjectItemChooser on:project-item-selected={onProjectItemChange}
-                                       portalId="{portalId}"
-                                       bind:selectedProjectId={selectedProject.id}
-                                       bind:selectedPortalUserId={selectedPortalUserId}
-                                       itemMode={projectItemMode}
-                                       selectedTaskId={selectedTask?.id}
-                                       selectedBugId={selectedBug?.id}
-                                       selectedTaskName={selectedTaskName}/>
+                                        portalId="{portalId}"
+                                        bind:selectedProjectId={selectedProject.id}
+                                        bind:selectedPortalUserId={selectedPortalUserId}
+                                        itemMode={projectItemMode}
+                                        selectedTaskId={selectedTask?.id}
+                                        selectedBugId={selectedBug?.id}
+                                        selectedTaskName={selectedTaskName}/>
                 </div>
                 <div class="column is-2">
                     <label class="label pb-1 is-small">Choose a Date</label>
@@ -254,10 +321,29 @@
                 </div>
                 <div class="column is-1" style="margin-top: 25px">
                     <div class="field has-addons">
-                        <button class="button is-small is-full-widescreen is-fullwidth" on:click={onClickTimerBtn}>
-                      <span class="icon">
-                        <i class="fas {timerBtnState.icon}"></i>
-                      </span>
+                        <button class="button is-small mr-1"
+                                class:is-hidden={timerState === TimerStates.RUNNING}
+                                class:is-fullwidth={timerState === TimerStates.STOPPED}
+                                class:is-full-widescreen={timerState === TimerStates.STOPPED}
+                                on:click={() => onClickTimerBtn(TimerStates.RUNNING)}>
+                          <span class="icon">
+                            <i class="fas"
+                               class:fa-forward-step={timerState === TimerStates.PAUSED}
+                               class:fa-play={timerState === TimerStates.STOPPED}></i>
+                          </span>
+                        </button>
+                        <button class="button is-small mr-1" class:is-hidden={timerState === TimerStates.STOPPED}
+                                on:click={() => onClickTimerBtn(TimerStates.STOPPED)}>
+                          <span class="icon">
+                            <i class="fas fa-stop"></i>
+                          </span>
+                        </button>
+                        <button class="button is-small"
+                                class:is-hidden={timerState === TimerStates.PAUSED || timerState === TimerStates.STOPPED}
+                                on:click={() => onClickTimerBtn(TimerStates.PAUSED)}>
+                          <span class="icon">
+                            <i class="fas fa-pause"></i>
+                          </span>
                         </button>
                     </div>
                 </div>
