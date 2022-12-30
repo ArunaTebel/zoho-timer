@@ -15,7 +15,6 @@
 
     let isTimerInitialized = false
     let timerText
-    let timerBtnState = {icon: 'fa-play'}
     let timeLogsReloadedAt = moment().format('Y-MM-DD HH:mm:ss')
     let timeLogsFetchLogsForDate = moment().format('Y-MM-DD')
     let selectedPortalUserId
@@ -273,13 +272,10 @@
 
     const setTimerState = () => {
         if (getTimerPausedAt()) {
-            timerBtnState.icon = 'fa-forward-step'
             timerState = TimerStates.PAUSED
         } else if (getTimerStartedAt()) {
-            timerBtnState.icon = 'fa-stop'
             timerState = TimerStates.RUNNING
         } else {
-            timerBtnState.icon = 'fa-play'
             timerState = TimerStates.STOPPED
         }
     }
