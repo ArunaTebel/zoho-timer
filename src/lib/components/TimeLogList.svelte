@@ -34,11 +34,12 @@
     let weeklyBillableTotal = 0
     let weeklyNonBillableTotal = 0
     let weeklyTotal = 0
+    let week = {start: '', end: ''}
 
     const fetchTimeLogs = async () => {
         isTimeLogsLoading = true
         timeLogFilterDate = moment(timeLogFilterDate).format('Y-[W]W')
-        timeLogs = {}
+        timeLogs = {logs: []}
         timeLogs = await Timesheet.fetchWeeklyLogsForCurrentUser(portalId, moment(timeLogFilterDate).format('MM-DD-Y'))
         isTimeLogsLoading = false
         setMetadata()
@@ -52,6 +53,11 @@
         weeklyBillableTotal = convertSecondsToHhmm((taskTotal.billable + generalTotal.billable + bugTotal.billable) * 60)
         weeklyNonBillableTotal = convertSecondsToHhmm((taskTotal.nonBillable + generalTotal.nonBillable + bugTotal.nonBillable) * 60)
         weeklyTotal = convertSecondsToHhmm((taskTotal.total + generalTotal.total + bugTotal.total) * 60)
+        const selectedDate = moment(timeLogFilterDate)
+        if (selectedDate) {
+            week.start = selectedDate.clone().weekday(1).format('Y-MM-DD');
+            week.end = selectedDate.clone().weekday(7).format('Y-MM-DD');
+        }
     }
 
     const getTotalForTaskType = (taskType) => {
@@ -325,8 +331,18 @@
 </div>
 <div class="card mt-4 card-border-left-info">
     <header class="card-header">
-        <p class="card-header-title">
-            Weekly Time Logs
+        <p class="card-header-title is-small-font">
+            Weekly Time Logs <span class="ml-1 has-text-grey">{`[${week.start} - ${week.end}]`}</span>
+            <span class="ml-2 field has-addons">
+                <input class="input is-inline is-small" type="week"
+                       bind:value={timeLogFilterDate}
+                       on:change={() => fetchTimeLogs()}/>
+                <button class="button is-small is-centered is-center" on:click={fetchTimeLogs}>
+                  <span class="icon is-small">
+                    <i class="fas fa-sync"></i>
+                  </span>
+                </button>
+            </span>
         </p>
         <div class="field is-grouped is-grouped-multiline mt-3 mr-3">
             <div class="control">
@@ -354,11 +370,11 @@
         </div>
         <div class="dropdown is-right is-hoverable mt-2 mr-3">
             <div class="dropdown-trigger">
-                <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu4">
+                <div class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu4">
                     <span class="icon is-small">
                       <i class="fa fa-info" aria-hidden="true"></i>
                     </span>
-                </button>
+                </div>
             </div>
             <div class="dropdown-menu" id="dropdown-menu4" role="menu">
                 <div class="dropdown-content">
@@ -417,16 +433,6 @@
                 </div>
             </div>
         </div>
-        <span class="mt-2 mr-4 field has-addons">
-            <input class="input is-inline is-small" type="week"
-                   bind:value={timeLogFilterDate}
-                   on:change={() => fetchTimeLogs()}/>
-            <button class="button is-small is-centered is-center" on:click={fetchTimeLogs}>
-              <span class="icon is-small">
-                <i class="fas fa-sync"></i>
-              </span>
-            </button>
-        </span>
     </header>
     <div class="card-content">
         <div class="content">
@@ -458,7 +464,7 @@
                         </div>
                     </div>
                     <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth mt-0">
-                        <thead style="font-size: 0.9rem">
+                        <thead class="is-small-font has-background-link-light">
                         <tr>
                             <th style="width: 25%">Project</th>
                             <th style="width: 30%">Task/Issue</th>
@@ -502,6 +508,9 @@
                         </tbody>
                     </table>
                 {/each}
+            {/if}
+            {#if (!isTimeLogsLoading && timeLogs.logs && Object.keys(timeLogs.logs).length === 0) }
+                <p class="is-small-font has-text-grey has-text-centered">- No time logs found -</p>
             {/if}
         </div>
     </div>
