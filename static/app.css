@@ -78,4 +78,8 @@ input.auto-complete-chooser {
     font-size: 0.9rem;
 }
 
+.dropdown-menu {
+    width: max-content;
+}
+
 

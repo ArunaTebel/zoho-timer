@@ -31,16 +31,67 @@
     let isSaving = false
     let timeLogEditErrorMessage
     let isTaskNameUnEditable = true
+    let weeklyBillableTotal = 0
+    let weeklyNonBillableTotal = 0
+    let weeklyTotal = 0
 
     const fetchTimeLogs = async () => {
         isTimeLogsLoading = true
         timeLogFilterDate = moment(timeLogFilterDate).format('Y-[W]W')
         timeLogs = {}
         timeLogs = await Timesheet.fetchWeeklyLogsForCurrentUser(portalId, moment(timeLogFilterDate).format('MM-DD-Y'))
-        timeLogsMetadata = timeLogs.meta
         isTimeLogsLoading = false
+        setMetadata()
     }
 
+    const setMetadata = () => {
+        timeLogsMetadata = timeLogs.meta ?? timeLogsMetadata
+        const taskTotal = getTotalForTaskType('task')
+        const generalTotal = getTotalForTaskType('general')
+        const bugTotal = getTotalForTaskType('bug')
+        weeklyBillableTotal = convertSecondsToHhmm((taskTotal.billable + generalTotal.billable + bugTotal.billable) * 60)
+        weeklyNonBillableTotal = convertSecondsToHhmm((taskTotal.nonBillable + generalTotal.nonBillable + bugTotal.nonBillable) * 60)
+        weeklyTotal = convertSecondsToHhmm((taskTotal.total + generalTotal.total + bugTotal.total) * 60)
+    }
+
+    const getTotalForTaskType = (taskType) => {
+        let billable = moment(timeLogsMetadata[taskType]?.billable_hours ?? '00:00', 'HH:mm')
+        let nonBillable = moment(timeLogsMetadata[taskType]?.non_billable_hours ?? '00:00', 'HH:mm')
+        let total = moment(timeLogsMetadata[taskType]?.grandtotal ?? '00:00', 'HH:mm')
+
+        return {
+            billable: (billable.hours() * 60) + billable.minutes(),
+            nonBillable: (nonBillable.hours() * 60) + nonBillable.minutes(),
+            total: (total.hours() * 60) + total.minutes(),
+        }
+    }
+
+    const convertSecondsToHhmm = (seconds) => {
+        seconds = parseInt(seconds)
+        let h = Math.floor(moment.duration(seconds, 'seconds').asHours())
+        let m = moment.duration(seconds, 'seconds').minutes()
+        return ('0' + h).slice(-2) + ':' + ('0' + m).slice(-2);
+    }
+
+    const getTotalDurationForDay = (logs) => {
+        const billableLogs = logs.filter(log => log.bill_status === 'Billable')
+        const nonBillableLogs = logs.filter(log => log.bill_status !== 'Billable')
+
+        const durationCalculator = (accumulator, timeLog) => {
+            const duration = moment(timeLog.hours_display, 'HH:mm')
+            return accumulator + (duration.hours() * 3600) + (duration.minutes() * 60)
+        }
+
+        const billableTotal = billableLogs.reduce(durationCalculator, 0)
+        const nonBillableTotal = nonBillableLogs.reduce(durationCalculator, 0)
+        const total = billableTotal + nonBillableTotal
+
+        return {
+            billable: convertSecondsToHhmm(billableTotal),
+            nonBillable: convertSecondsToHhmm(nonBillableTotal),
+            total: convertSecondsToHhmm(total)
+        }
+    }
     const validateInputs = () => {
         if (!timeLogEditSelectedDate) {
             throw new Error('Please select a Date')
@@ -276,66 +327,106 @@
     <header class="card-header">
         <p class="card-header-title">
             Weekly Time Logs
-            <span class="ml-3 field has-addons">
-                <input class="input is-inline is-small" type="week"
-                       bind:value={timeLogFilterDate}
-                       on:change={() => fetchTimeLogs()}/>
-                <button class="button is-small is-centered is-center" on:click={fetchTimeLogs}>
-                  <span class="icon is-small">
-                    <i class="fas fa-sync"></i>
-                  </span>
-                </button>
-            </span>
         </p>
-        <div class="is-inline-flex mt-4">
-            <div class="field is-grouped is-grouped-multiline mr-2">
-                <div class="control">
-                    <div class="tags has-addons">
-                        <span class="tag is-dark">Tasks</span>
-                        <span class="tag is-warning" title={`Billable hours`}>
+        <div class="field is-grouped is-grouped-multiline mt-3 mr-3">
+            <div class="control">
+                <div class="tags has-addons">
+                    <span class="tag is-primary">
+                        Billable
+                    </span>
+                    <span class="tag">
+                        {weeklyBillableTotal}
+                    </span>
+                    <span class="tag is-warning">
+                        Non-Billable
+                    </span>
+                    <span class="tag">
+                        {weeklyNonBillableTotal}
+                    </span>
+                    <span class="tag is-danger">
+                        Total
+                    </span>
+                    <span class="tag">
+                        {weeklyTotal}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="dropdown is-right is-hoverable mt-2 mr-3">
+            <div class="dropdown-trigger">
+                <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu4">
+                    <span class="icon is-small">
+                      <i class="fa fa-info" aria-hidden="true"></i>
+                    </span>
+                </button>
+            </div>
+            <div class="dropdown-menu" id="dropdown-menu4" role="menu">
+                <div class="dropdown-content">
+                    <div class="dropdown-item">
+                        <div class="ml-5 is-vcentered full-width">
+                            <div class="field is-grouped is-grouped-multiline mt-2">
+                                <div class="control">
+                                    <div class="tags has-addons">
+                                        <span class="tag">Tasks</span>
+                                        <span class="tag is-light is-warning" title={`Billable hours`}>
                             {`B ${timeLogsMetadata.task?.billable_hours}`}
                         </span>
-                        <span class="tag is-primary" title={`Non billable hours`}>
+                                        <span class="tag is-light is-primary" title={`Non billable hours`}>
                             {`NB ${timeLogsMetadata.task?.non_billable_hours}`}
                         </span>
-                        <span class="tag is-success" title={`Total hours`}>
+                                        <span class="tag is-light is-success" title={`Total hours`}>
                             {`T ${timeLogsMetadata.task?.grandtotal}`}
                         </span>
-                    </div>
-                </div>
-            </div>
-            <div class="field is-grouped is-grouped-multiline mr-2">
-                <div class="control">
-                    <div class="tags has-addons">
-                        <span class="tag is-dark">General</span>
-                        <span class="tag is-warning" title={`Billable hours`}>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field is-grouped is-grouped-multiline mt-2">
+                                <div class="control">
+                                    <div class="tags has-addons">
+                                        <span class="tag">General</span>
+                                        <span class="tag is-light is-warning" title={`Billable hours`}>
                             {`B: ${timeLogsMetadata.general?.billable_hours}`}
                         </span>
-                        <span class="tag is-primary" title={`Non billable hours`}>
+                                        <span class="tag is-light is-primary" title={`Non billable hours`}>
                             {`NB ${timeLogsMetadata.general?.non_billable_hours}`}
                         </span>
-                        <span class="tag is-success" title={`Total hours`}>
+                                        <span class="tag is-light is-success" title={`Total hours`}>
                             {`T ${timeLogsMetadata.general?.grandtotal}`}
                         </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field is-grouped is-grouped-multiline mt-2 mb-0">
+                                <div class="control">
+                                    <div class="tags has-addons">
+                                        <span class="tag">Issues</span>
+                                        <span class="tag is-light is-warning" title={`Billable hours`}>
+                                            {`B ${timeLogsMetadata.bug?.billable_hours}`}
+                                        </span>
+                                        <span class="tag is-light is-primary" title={`Non billable hours`}>
+                                            {`NB ${timeLogsMetadata.bug?.non_billable_hours}`}
+                                        </span>
+                                        <span class="tag is-light is-success" title={`Total hours`}>
+                                            {`T ${timeLogsMetadata.bug?.grandtotal}`}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="field is-grouped is-grouped-multiline mr-2">
-                <div class="control">
-                    <div class="tags has-addons">
-                        <span class="tag is-dark">Issues</span>
-                        <span class="tag is-warning" title={`Billable hours`}>
-                            {`B ${timeLogsMetadata.bug?.billable_hours}`}
-                        </span>
-                        <span class="tag is-primary" title={`Non billable hours`}>
-                            {`NB ${timeLogsMetadata.bug?.non_billable_hours}`}
-                        </span>
-                        <span class="tag is-success" title={`Total hours`}>
-                            {`T ${timeLogsMetadata.bug?.grandtotal}`}
-                        </span>
-                    </div>
-                </div>
-            </div>
+        </div>
+        <span class="mt-2 mr-4 field has-addons">
+            <input class="input is-inline is-small" type="week"
+                   bind:value={timeLogFilterDate}
+                   on:change={() => fetchTimeLogs()}/>
+            <button class="button is-small is-centered is-center" on:click={fetchTimeLogs}>
+              <span class="icon is-small">
+                <i class="fas fa-sync"></i>
+              </span>
+            </button>
+        </span>
     </header>
     <div class="card-content">
         <div class="content">
@@ -344,9 +435,29 @@
             {/if}
             {#if (timeLogs.logs)}
                 {#each Object.keys(timeLogs.logs) as date }
-                    <label class="label is-small">{moment(date).format('Y-MM-DD')}</label>
-                    <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth"
-                           style="width: 100%">
+                    <div class="columns mb-0 is-gapless">
+                        <div class="column is-10 pb-0">
+                            <label class="label is-small">{moment(date).format('Y-MM-DD')}</label>
+                        </div>
+                        <div class="column is-2 pb-0">
+                            <div class="field is-grouped is-grouped-multiline mb-0">
+                                <div class="control">
+                                    <div class="tags has-addons">
+                                <span class="tag is-light is-primary" title={`Billable hours`}>
+                                            {`B ${getTotalDurationForDay(timeLogs.logs[date]).billable}`}
+                                        </span>
+                                        <span class="tag is-light is-warning" title={`Non billable hours`}>
+                                            {`NB ${getTotalDurationForDay(timeLogs.logs[date]).nonBillable}`}
+                                        </span>
+                                        <span class="tag is-light is-danger" title={`Total hours`}>
+                                            {`T ${getTotalDurationForDay(timeLogs.logs[date]).total}`}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth mt-0">
                         <thead style="font-size: 0.9rem">
                         <tr>
                             <th style="width: 25%">Project</th>
