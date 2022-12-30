@@ -13,6 +13,7 @@
     const timerData = StorageService.timer.getData()
     const TimerStates = {RUNNING: 1, PAUSED: 2, STOPPED: 3}
 
+    let zohoUserId
     let isTimerInitialized = false
     let timerText
     let timeLogsReloadedAt = moment().format('Y-MM-DD HH:mm:ss')
@@ -52,7 +53,7 @@
             StorageService.common.setZohoPortalUser(portalUser)
             zohoUser = StorageService.common.getZohoPortalUser()
         }
-        selectedPortalUserId = zohoUser.zpuid
+        selectedPortalUserId = zohoUser?.zpuid
     }
 
     const initTimer = () => {
@@ -304,8 +305,8 @@
 </script>
 
 <div class="card card-border-left-primary"
-class:has-background-primary-light={timerState === TimerStates.RUNNING}
-class:has-background-warning-light={timerState === TimerStates.PAUSED}
+     class:has-background-primary-light={timerState === TimerStates.RUNNING}
+     class:has-background-warning-light={timerState === TimerStates.PAUSED}
 >
     <div class="card-content">
         <div class="content">
@@ -393,5 +394,7 @@ class:has-background-warning-light={timerState === TimerStates.PAUSED}
     </div>
 </div>
 
-<TimeLogList portalId={portalId} reloadedAt={timeLogsReloadedAt}
-             timeLogFilterDate={timeLogsFetchLogsForDate}/>
+{#if isTimerInitialized}
+    <TimeLogList portalId={portalId} reloadedAt={timeLogsReloadedAt} timeLogFilterDate={timeLogsFetchLogsForDate}/>
+{/if}
+

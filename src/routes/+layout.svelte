@@ -3,10 +3,16 @@
     import logo from '$lib/assets/img/logo.png';
     import {Auth} from "./util/APIService.js";
     import {SvelteToast} from '@zerodevx/svelte-toast'
+    import {PUBLIC_ZOHO_CLIENT_ID, PUBLIC_ZOHO_OAUTH_URL, PUBLIC_ZOHO_SCOPE} from "$env/static/public";
+    import {page} from "$app/stores";
+    export let data
+
+    let oauthUrl = `${PUBLIC_ZOHO_OAUTH_URL}/auth?scope=${PUBLIC_ZOHO_SCOPE}&client_id=${PUBLIC_ZOHO_CLIENT_ID}&response_type=code&access_type=offline&redirect_uri=${$page.url.origin}/auth-callback&prompt=consent`
 
     const onLogout = async () => {
         await Auth.logout()
-        location.reload()
+        localStorage.clear()
+        location.href = '/'
     }
 
 </script>
@@ -28,9 +34,12 @@
         <div class="navbar-end">
             <div class="navbar-item">
                 <div class="buttons">
-                    <button on:click={onLogout} class="button is-danger is-small">
+                    <button class:is-hidden={!data.isAuthorized} on:click={onLogout} class="button is-danger is-small">
                         Log out
                     </button>
+                    <a class:is-hidden={data.isAuthorized} class="button is-primary is-small" href="{oauthUrl}">
+                        Authorize ZOHO
+                    </a>
                 </div>
             </div>
         </div>

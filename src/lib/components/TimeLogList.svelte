@@ -369,14 +369,14 @@
                                     <div class="tags has-addons">
                                         <span class="tag">Tasks</span>
                                         <span class="tag is-light is-warning" title={`Billable hours`}>
-                            {`B ${timeLogsMetadata.task?.billable_hours}`}
-                        </span>
+                                            {`B ${timeLogsMetadata.task?.billable_hours ?? '00:00'}`}
+                                        </span>
                                         <span class="tag is-light is-primary" title={`Non billable hours`}>
-                            {`NB ${timeLogsMetadata.task?.non_billable_hours}`}
-                        </span>
+                                            {`NB ${timeLogsMetadata.task?.non_billable_hours ?? '00:00'}`}
+                                        </span>
                                         <span class="tag is-light is-success" title={`Total hours`}>
-                            {`T ${timeLogsMetadata.task?.grandtotal}`}
-                        </span>
+                                            {`T ${timeLogsMetadata.task?.grandtotal ?? '00:00'}`}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -385,14 +385,14 @@
                                     <div class="tags has-addons">
                                         <span class="tag">General</span>
                                         <span class="tag is-light is-warning" title={`Billable hours`}>
-                            {`B: ${timeLogsMetadata.general?.billable_hours}`}
-                        </span>
+                                            {`B: ${timeLogsMetadata.general?.billable_hours ?? '00:00'}`}
+                                        </span>
                                         <span class="tag is-light is-primary" title={`Non billable hours`}>
-                            {`NB ${timeLogsMetadata.general?.non_billable_hours}`}
-                        </span>
+                                            {`NB ${timeLogsMetadata.general?.non_billable_hours ?? '00:00'}`}
+                                        </span>
                                         <span class="tag is-light is-success" title={`Total hours`}>
-                            {`T ${timeLogsMetadata.general?.grandtotal}`}
-                        </span>
+                                            {`T ${timeLogsMetadata.general?.grandtotal ?? '00:00'}`}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -401,13 +401,13 @@
                                     <div class="tags has-addons">
                                         <span class="tag">Issues</span>
                                         <span class="tag is-light is-warning" title={`Billable hours`}>
-                                            {`B ${timeLogsMetadata.bug?.billable_hours}`}
+                                            {`B ${timeLogsMetadata.bug?.billable_hours ?? '00:00'}`}
                                         </span>
                                         <span class="tag is-light is-primary" title={`Non billable hours`}>
-                                            {`NB ${timeLogsMetadata.bug?.non_billable_hours}`}
+                                            {`NB ${timeLogsMetadata.bug?.non_billable_hours ?? '00:00'}`}
                                         </span>
                                         <span class="tag is-light is-success" title={`Total hours`}>
-                                            {`T ${timeLogsMetadata.bug?.grandtotal}`}
+                                            {`T ${timeLogsMetadata.bug?.grandtotal ?? '00:00'}`}
                                         </span>
                                     </div>
                                 </div>

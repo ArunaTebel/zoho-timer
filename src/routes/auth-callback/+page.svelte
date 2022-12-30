@@ -1,10 +1,16 @@
 <script>
+    import {onMount} from "svelte";
+
     export let data;
+
+    onMount(() => {
+        if (data.zohoAuthData.access_token) {
+            location.href = '/'
+        }
+    })
+
 </script>
 
-{#if data.zohoAuthData.access_token}
-    <p>Successfully Authorized with Zoho!</p>
-    <a href="/">Go to App</a>
-{:else }
+{#if !data.zohoAuthData.access_token}
     <p>Authorization failed! Try again in a moment</p>
 {/if}
