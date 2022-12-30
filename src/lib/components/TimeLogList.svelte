@@ -30,6 +30,7 @@
     let isDeleting = false
     let isSaving = false
     let timeLogEditErrorMessage
+    let isTaskNameUnEditable = true
 
     const fetchTimeLogs = async () => {
         isTimeLogsLoading = true
@@ -99,14 +100,19 @@
         timeLogEditSelectedProjectId = timeLogToEdit.project.id_string
         timeLogEditSelectedTaskId = timeLogToEdit.task?.id_string
         timeLogEditSelectedBugId = timeLogToEdit.bug?.id_string
-        timeLogEditSelectedTaskName = timeLogToEdit.name
+        timeLogEditSelectedTaskName = getTaskOrBugName(timeLogToEdit)
         isBillable = timeLogToEdit.bill_status === 'Billable'
         timeLogEditSelectedTimeDurationHrs = timeLogToEdit.hours
         timeLogEditSelectedTimeDurationMins = timeLogToEdit.minutes
         timeLogEditSelectedDate = moment(date).format('Y-MM-DD')
         timeLogEditSelectedNote = timeLogToEdit.notes
         projectItemMode = getItemModeForLog(timeLogToEdit)
+        isTaskNameUnEditable = isTaskNameUnEditableForTimeLog(timeLogToEdit)
         openTimeLogEditModal()
+    }
+
+    const isTaskNameUnEditableForTimeLog = (timeLog) => {
+        return timeLog.task?.id || timeLog.bug?.id
     }
 
     const onTimeLogDeleteClicked = async (date, timeLogId) => {
@@ -207,10 +213,10 @@
                 </div>
 
                 <div class="field">
-                    <label class="label is-small">Task</label>
+                    <label class="label is-small">Task/Issue</label>
                     <div class="control">
-                        <input disabled class="input is-disabled is-small" type="text"
-                               value={getTaskOrBugName(timeLogToEdit)}/>
+                        <input disabled="{isTaskNameUnEditable}" class="input is-disabled is-small" type="text"
+                               bind:value={timeLogEditSelectedTaskName}/>
                     </div>
                 </div>
 
