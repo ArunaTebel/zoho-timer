@@ -67,7 +67,7 @@
         let billable = (timeLogsMetadata[taskType]?.billable_hours ?? '00:00').split(':')
         let nonBillable = (timeLogsMetadata[taskType]?.non_billable_hours ?? '00:00').split(':')
         let total = (timeLogsMetadata[taskType]?.grandtotal ?? '00:00').split(':')
-        
+
         return {
             billable: (parseInt(billable[0], 10) * 60) + parseInt(billable[1], 10),
             nonBillable: (parseInt(nonBillable[0], 10) * 60) + parseInt(nonBillable[1], 10),
@@ -486,12 +486,12 @@
                         <tbody>
                         {#each timeLogs.logs[date] as timeLog (timeLog.id_string) }
                             <tr style="font-size: 0.8rem">
-                                <td>{timeLog.project.name}</td>
-                                <td class="wrap">{getTaskOrBugName(timeLog)}</td>
+                                <td>{@html timeLog.project.name}</td>
+                                <td class="wrap">{@html getTaskOrBugName(timeLog)}</td>
                                 <td>{timeLog.hours_display}</td>
                                 <td>{timeLog.bill_status === 'Billable' ? 'Yes' : 'No'}</td>
                                 <td>{timeLog.approval_status}</td>
-                                <td class="wrap">{timeLog.notes}</td>
+                                <td class="wrap">{@html timeLog.notes}</td>
                                 <td class="has-text-centered">
                                     <div class="field has-addons is-inline">
                                         <button class="button is-small"
@@ -520,7 +520,6 @@
                                 </td>
                             </tr>
                         {/each}
-
                         </tbody>
                     </table>
                 {/each}
