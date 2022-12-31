@@ -1,6 +1,9 @@
 <script>
     import {Timesheet} from "../../routes/util/APIService.js";
     import moment from "moment";
+    import {createEventDispatcher} from "svelte";
+
+    const dispatch = createEventDispatcher()
 
     export let portalId
     export let reloadedAt = moment().format('Y-MM-DD HH:mm:ss')
@@ -166,6 +169,11 @@
         projectItemMode = getItemModeForLog(timeLogToEdit)
         isTaskNameUnEditable = isTaskNameUnEditableForTimeLog(timeLogToEdit)
         openTimeLogEditModal()
+    }
+
+    const onTimeLogRerunClicked = (date, timeLogId) => {
+        const timeLogToRun = timeLogs.logs[date].find(timeLog => timeLog.id_string === timeLogId)
+        dispatch('run-time-log', timeLogToRun)
     }
 
     const isTaskNameUnEditableForTimeLog = (timeLog) => {
@@ -467,12 +475,12 @@
                         <thead class="is-small-font has-background-link-light">
                         <tr>
                             <th style="width: 25%">Project</th>
-                            <th style="width: 30%">Task/Issue</th>
+                            <th style="width: 29%">Task/Issue</th>
                             <th style="width: 5%">Duration</th>
                             <th style="width: 5%">Billable?</th>
                             <th style="width: 5%">Status</th>
-                            <th style="width: 22%;">Notes</th>
-                            <th style="width: 8%">Actions</th>
+                            <th style="width: 20%;">Notes</th>
+                            <th style="width: 11%">Actions</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -484,21 +492,29 @@
                                 <td>{timeLog.bill_status === 'Billable' ? 'Yes' : 'No'}</td>
                                 <td>{timeLog.approval_status}</td>
                                 <td class="wrap">{timeLog.notes}</td>
-                                <td>
+                                <td class="has-text-centered">
                                     <div class="field has-addons is-inline">
                                         <button class="button is-small"
                                                 on:click={() => onTimeLogEditClicked(date, timeLog.id_string)}>
-                                <span class="icon is-small">
-                                    <i class="fas fa-edit"></i>
-                                </span>
+                                            <span class="icon is-small has-text-info">
+                                                <i class="fas fa-edit"></i>
+                                            </span>
+                                        </button>
+                                    </div>
+                                    <div class="field has-addons is-inline">
+                                        <button class="button is-small"
+                                                on:click={() => onTimeLogRerunClicked(date, timeLog.id_string)}>
+                                            <span class="icon is-small has-text-success">
+                                                <i class="fas fa-play"></i>
+                                            </span>
                                         </button>
                                     </div>
                                     <div class="field has-addons is-inline">
                                         <button class="button is-small"
                                                 on:click={() => onTimeLogDeleteClicked(date, timeLog.id_string)}>
-                                <span class="icon is-small">
-                                    <i class="fas fa-trash"></i>
-                                </span>
+                                            <span class="icon is-small has-text-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </span>
                                         </button>
                                     </div>
                                 </td>

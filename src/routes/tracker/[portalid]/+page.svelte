@@ -163,6 +163,31 @@
         }
     }
 
+    const runTimeLog = (event) => {
+        Timer.clear()
+        const timeLog = event.detail
+        selectedProject = {...timeLog.project, id: timeLog.project.id_string}
+
+        setTimeout(() => {
+            projectItemMode = 'general'
+            if (timeLog.task) {
+                selectedTask = {...timeLog.task, id: timeLog.task.id_string}
+                projectItemMode = 'task'
+            }
+            if (timeLog.bug) {
+                selectedBug = {...timeLog.bug, id: timeLog.bug.id_string}
+                projectItemMode = 'bug'
+            }
+            if (timeLog.name) {
+                selectedTaskName = timeLog.name
+            }
+            date = moment().format('Y-MM-DD')
+            note = timeLog.notes
+            onClickTimerBtn(TimerStates.RUNNING)
+        }, 0)
+
+    }
+
     const getTimerData = () => {
         return StorageService.timer.getData()
     }
@@ -400,6 +425,7 @@
 </div>
 
 {#if isTimerInitialized}
-    <TimeLogList portalId={portalId} reloadedAt={timeLogsReloadedAt} timeLogFilterDate={timeLogsFetchLogsForDate}/>
+    <TimeLogList on:run-time-log={runTimeLog} portalId={portalId} reloadedAt={timeLogsReloadedAt}
+                 timeLogFilterDate={timeLogsFetchLogsForDate}/>
 {/if}
 
