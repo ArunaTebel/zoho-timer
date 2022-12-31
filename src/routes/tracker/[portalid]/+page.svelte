@@ -13,7 +13,6 @@
     const timerData = StorageService.timer.getData()
     const TimerStates = {RUNNING: 1, PAUSED: 2, STOPPED: 3}
 
-    let zohoUserId
     let isTimerInitialized = false
     let timerText
     let timeLogsReloadedAt = moment().format('Y-MM-DD HH:mm:ss')
@@ -29,9 +28,14 @@
     let note = timerData?.note ?? ''
     let projectItemMode = timerData?.projectItemMode ?? 'task'
     let pausedAt = timerData?.pausedAt
+    let timerStartedAt = timerData?.startedAt
     let totalPausedDuration = timerData?.totalPausedDuration ?? 0
     let timerState
     let timerIntervalId
+
+    $ :{
+        document.title = `Timer [${timerText}]`
+    }
 
     onMount(async () => {
         await setDynamicUserDetails()
@@ -286,9 +290,9 @@
             pausedAt,
             totalPausedDuration,
         }
-        const timerStartedAt = getTimerStartedAt()
+        timerStartedAt = getTimerStartedAt()
         if (startTimer) {
-            timerData.startedAt = moment().unix()
+            timerStartedAt = timerData.startedAt = moment().unix()
         } else if (timerStartedAt) {
             timerData.startedAt = timerStartedAt
         }
@@ -329,10 +333,69 @@
     }
 </script>
 
+<svelte:head>
+    {#if timerState === TimerStates.RUNNING}
+        <link rel="icon" href="/favicon-active.png"/>
+    {:else }
+        <link rel="icon" href="/favicon.png"/>
+    {/if}
+
+    {#if timerState === TimerStates.PAUSED}
+        <title>Timer [{timerText}] ⏸</title>
+    {:else if timerState === TimerStates.STOPPED}
+        <title>Zoho - Time Tracker</title>
+    {/if}
+</svelte:head>
 <div class="card card-border-left-primary"
      class:has-background-primary-light={timerState === TimerStates.RUNNING}
      class:has-background-warning-light={timerState === TimerStates.PAUSED}
 >
+    <header class="card-header">
+        <p class="card-header-title is-small-font">
+            Time tracker
+        </p>
+        <nav class="level">
+            <div class="level-item has-text-centered mr-2 has-text-grey"
+                 class:is-hidden={timerState === TimerStates.STOPPED}>
+                <div>
+                    <p class="is-small-font">
+                        Started at: {moment.unix(timerStartedAt).format('HH:mm')}
+                    </p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered mr-2 has-text-grey"
+                 class:is-hidden={timerState === TimerStates.STOPPED}>
+                <div>
+                    <p class="is-small-font">
+                        Paused at:
+                        {#if !!pausedAt}
+                            <span>{moment.unix(pausedAt).format('HH:mm')}</span>
+                        {:else }
+                            <span>N/A</span>
+                        {/if}
+                    </p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered">
+                <div class="mr-2 has-text-weight-bold">
+                    <span class="tag is-medium"
+                          class:is-info={timerState === TimerStates.RUNNING}
+                          class:is-warning={timerState === TimerStates.PAUSED}
+                          class:is-light={timerState === TimerStates.STOPPED}
+                    >
+                        {timerText ? timerText : '-- : -- : --'}
+                    </span>
+                </div>
+            </div>
+            <div class="level-item has-text-centered" class:is-hidden={timerState === TimerStates.STOPPED}>
+                <button class="button is-small mr-2" title="Clear Timer" on:click={Timer.clear}>
+                    <span class="icon">
+                      <i class="fas fa-ban"></i>
+                    </span>
+                </button>
+            </div>
+        </nav>
+    </header>
     <div class="card-content">
         <div class="content">
             <div class="columns is-vcentered">
@@ -371,11 +434,11 @@
             </div>
             <div class="columns is-vcentered">
 
-                <div class="column is-9">
+                <div class="column is-11">
                     <input class="input is-small" type="text" maxlength="150" placeholder="Note" bind:value={note}
                            on:keyup={() => updateTimerDataStorage()}/>
                 </div>
-                <div class="column is-2">
+                <div class="column is-1">
                     <div class="field has-addons">
                         <button class="button is-small mr-1 is-success"
                                 title={timerState === TimerStates.STOPPED ? 'Start Timer' : 'Resume Timer'}
@@ -403,21 +466,7 @@
                             <i class="fas fa-pause"></i>
                           </span>
                         </button>
-                        <button class="button is-small ml-1" title="Clear Timer" on:click={Timer.clear}>
-                            <span class="icon">
-                              <i class="fas fa-trash-can"></i>
-                            </span>
-                        </button>
                     </div>
-                </div>
-                <div class="column is-1 has-text-weight-bold">
-                    <span class="tag is-medium"
-                          class:is-info={timerState === TimerStates.RUNNING}
-                          class:is-warning={timerState === TimerStates.PAUSED}
-                          class:is-light={timerState === TimerStates.STOPPED}
-                    >
-                        {timerText ? timerText : '-- : -- : --'}
-                    </span>
                 </div>
             </div>
         </div>
