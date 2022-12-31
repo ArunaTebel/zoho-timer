@@ -64,14 +64,14 @@
     }
 
     const getTotalForTaskType = (taskType) => {
-        let billable = moment(timeLogsMetadata[taskType]?.billable_hours ?? '00:00', 'HH:mm')
-        let nonBillable = moment(timeLogsMetadata[taskType]?.non_billable_hours ?? '00:00', 'HH:mm')
-        let total = moment(timeLogsMetadata[taskType]?.grandtotal ?? '00:00', 'HH:mm')
-
+        let billable = (timeLogsMetadata[taskType]?.billable_hours ?? '00:00').split(':')
+        let nonBillable = (timeLogsMetadata[taskType]?.non_billable_hours ?? '00:00').split(':')
+        let total = (timeLogsMetadata[taskType]?.grandtotal ?? '00:00').split(':')
+        
         return {
-            billable: (billable.hours() * 60) + billable.minutes(),
-            nonBillable: (nonBillable.hours() * 60) + nonBillable.minutes(),
-            total: (total.hours() * 60) + total.minutes(),
+            billable: (parseInt(billable[0], 10) * 60) + parseInt(billable[1], 10),
+            nonBillable: (parseInt(nonBillable[0], 10) * 60) + parseInt(nonBillable[1], 10),
+            total: (parseInt(total[0], 10) * 60) + parseInt(total[1], 10),
         }
     }
 
