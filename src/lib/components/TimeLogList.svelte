@@ -7,8 +7,7 @@
 
     export let portalId
     export let reloadedAt = moment().format('Y-MM-DD HH:mm:ss')
-    export let timeLogFilterDate = moment().format('Y-[W]W')
-
+    export let timeLogFilterDate = moment().startOf('isoweek').format('Y-[W]WW')
     let timeLogs = {}
     let timeLogsMetadata = {
         task: {billable_hours: '00:00', non_billable_hours: '00:00', grandtotal: '00:00'},
@@ -41,7 +40,7 @@
 
     const fetchTimeLogs = async () => {
         isTimeLogsLoading = true
-        timeLogFilterDate = moment(timeLogFilterDate).format('Y-[W]W')
+        timeLogFilterDate = moment(timeLogFilterDate).format('Y-[W]WW')
         timeLogs = {logs: []}
         timeLogs = await Timesheet.fetchWeeklyLogsForCurrentUser(portalId, moment(timeLogFilterDate).format('MM-DD-Y'))
         isTimeLogsLoading = false

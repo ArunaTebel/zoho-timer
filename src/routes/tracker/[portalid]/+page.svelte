@@ -16,7 +16,7 @@
     let isTimerInitialized = false
     let timerText
     let timeLogsReloadedAt = moment().format('Y-MM-DD HH:mm:ss')
-    let timeLogsFetchLogsForDate = moment().format('Y-MM-DD')
+    let timeLogsFetchLogsForDate = moment().startOf('isoweek').format('Y-[W]WW')
     let selectedPortalUserId
     let selectedProject = timerData?.selectedProject ?? {}
     let selectedTask = timerData?.selectedTask ?? {}
@@ -251,7 +251,7 @@
                     error(`Failed to save the time log. ${response.error.message}`)
                 } else {
                     success('Successfully saved the time log')
-                    refreshTimeLogs(moment(date).format('Y-MM-DD'))
+                    refreshTimeLogs(moment(date).format('Y-[W]WW'))
                 }
                 Timer.clear()
             } catch (e) {
